@@ -1,9 +1,11 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const cors = require('cors');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/swagger');
 const connectDB = require('./config/db');
 const container = require('./config/container');
+
 
 const userRoutes = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
@@ -14,6 +16,12 @@ dotenv.config();
 connectDB();
 
 const app = express();
+
+app.use(cors({
+    origin: 'http://localhost:5179',
+    credentials: true
+}));
+
 app.use(express.json());
 app.set('container', container);
 
