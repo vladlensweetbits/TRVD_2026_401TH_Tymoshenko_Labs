@@ -44,7 +44,7 @@ const ProductForm = () => {
                     images: (p.images || []).join(', '),
                 });
             } catch {
-                showToast('❌ Не вдалось завантажити товар');
+                showToast('Failed to load product');
             } finally {
                 setFetchLoading(false);
             }
@@ -54,13 +54,13 @@ const ProductForm = () => {
 
     const validate = () => {
         const e = {};
-        if (!form.name.trim()) e.name = "Назва обов'язкова";
-        if (!form.description.trim()) e.description = "Опис обов'язковий";
+        if (!form.name.trim()) e.name = 'Name is required';
+        if (!form.description.trim()) e.description = 'Description is required';
         if (!form.price || isNaN(Number(form.price)) || Number(form.price) < 0)
-            e.price = 'Введіть коректну ціну';
-        if (!form.category) e.category = "Категорія обов'язкова";
+            e.price = 'Enter a valid price';
+        if (!form.category) e.category = 'Category is required';
         if (form.stock === '' || isNaN(Number(form.stock)) || Number(form.stock) < 0)
-            e.stock = 'Введіть коректну кількість';
+            e.stock = 'Enter a valid quantity';
         return e;
     };
 
@@ -87,15 +87,15 @@ const ProductForm = () => {
 
             if (isEdit) {
                 await productService.update(id, payload);
-                showToast('✅ Товар оновлено');
+                showToast('Product updated successfully');
                 setTimeout(() => navigate(`/products/${id}`), 1200);
             } else {
                 const res = await productService.create(payload);
-                showToast('✅ Товар додано');
+                showToast('Product added successfully');
                 setTimeout(() => navigate(`/products/${res.data._id}`), 1200);
             }
         } catch (err) {
-            showToast('❌ ' + (err.response?.data?.message || 'Помилка збереження'));
+            showToast(err.response?.data?.message || 'Failed to save product');
         } finally {
             setLoading(false);
         }
@@ -110,35 +110,35 @@ const ProductForm = () => {
             {toast && <div style={s.toast}>{toast}</div>}
 
             <button style={s.backBtn} onClick={() => navigate(isEdit ? `/products/${id}` : '/')}>
-                ← Назад
+                Back
             </button>
 
             <div style={s.card}>
-                <h2 style={s.title}>{isEdit ? 'Редагувати товар' : 'Новий товар'}</h2>
+                <h2 style={s.title}>{isEdit ? 'Edit Product' : 'New Product'}</h2>
 
-                <form onSubmit={handleSubmit}>
-                    <Field label="Назва товару" error={errors.name}>
+                <form onSubmit={handleSubmit} noValidate>
+                    <Field label="Product Name" error={errors.name}>
                         <input style={{ ...s.input, ...(errors.name ? s.inputErr : {}) }}
                                name="name" value={form.name} onChange={handleChange}
-                               placeholder="Наприклад: Intel Core i9-14900K" />
+                               placeholder="e.g. Intel Core i9-14900K" />
                     </Field>
 
-                    <Field label="Категорія" error={errors.category}>
+                    <Field label="Category" error={errors.category}>
                         <select style={{ ...s.input, ...(errors.category ? s.inputErr : {}) }}
                                 name="category" value={form.category} onChange={handleChange}>
-                            <option value="">Оберіть категорію</option>
+                            <option value="">Select a category</option>
                             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
                     </Field>
 
                     <div style={s.row}>
-                        <Field label="Ціна (₴)" error={errors.price} style={{ flex: 1 }}>
+                        <Field label="Price ($)" error={errors.price} style={{ flex: 1 }}>
                             <input style={{ ...s.input, ...(errors.price ? s.inputErr : {}) }}
                                    name="price" type="number" min="0" step="0.01"
                                    value={form.price} onChange={handleChange}
                                    placeholder="0.00" />
                         </Field>
-                        <Field label="Кількість на складі" error={errors.stock} style={{ flex: 1 }}>
+                        <Field label="Stock Quantity" error={errors.stock} style={{ flex: 1 }}>
                             <input style={{ ...s.input, ...(errors.stock ? s.inputErr : {}) }}
                                    name="stock" type="number" min="0"
                                    value={form.stock} onChange={handleChange}
@@ -146,20 +146,20 @@ const ProductForm = () => {
                         </Field>
                     </div>
 
-                    <Field label="Опис" error={errors.description}>
+                    <Field label="Description" error={errors.description}>
                         <textarea style={{ ...s.input, ...s.textarea, ...(errors.description ? s.inputErr : {}) }}
                                   name="description" value={form.description} onChange={handleChange}
-                                  placeholder="Детальний опис товару..." rows={4} />
+                                  placeholder="Detailed product description..." rows={4} />
                     </Field>
 
-                    <Field label="Зображення (URL через кому)" error={errors.images}>
+                    <Field label="Images (URLs separated by comma)" error={errors.images}>
                         <input style={s.input}
                                name="images" value={form.images} onChange={handleChange}
                                placeholder="https://..., https://..." />
                     </Field>
 
                     <button type="submit" disabled={loading} style={s.submitBtn}>
-                        {loading ? 'Збереження...' : isEdit ? 'Зберегти зміни' : 'Додати товар'}
+                        {loading ? 'Saving...' : isEdit ? 'Save Changes' : 'Add Product'}
                     </button>
                 </form>
             </div>
@@ -169,25 +169,27 @@ const ProductForm = () => {
 
 const Field = ({ label, error, children, style = {} }) => (
     <div style={{ marginBottom: '18px', ...style }}>
-        <label style={{ display: 'block', color: '#ccc', fontSize: '13px', marginBottom: '6px' }}>{label}</label>
+        <label style={{ display: 'block', color: '#040d15', fontSize: '13px', fontWeight: '500', marginBottom: '6px' }}>
+            {label}
+        </label>
         {children}
-        {error && <span style={{ color: '#e05555', fontSize: '12px', marginTop: '4px', display: 'block' }}>{error}</span>}
+        {error && <span style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'block' }}>{error}</span>}
     </div>
 );
 
 const s = {
-    page: { minHeight: '100vh', backgroundColor: '#0f0f1a', padding: '32px', color: '#fff' },
+    page: { minHeight: '100vh', backgroundColor: '#f0f4f8', padding: '32px', color: '#040d15' },
     center: { display: 'flex', justifyContent: 'center', padding: '80px 0' },
-    spinner: { width: '40px', height: '40px', border: '4px solid #2a2a4e', borderTop: '4px solid #4a9eff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
-    backBtn: { background: 'transparent', border: '1px solid #2a2a4e', color: '#888', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', marginBottom: '24px' },
-    card: { backgroundColor: '#1a1a2e', border: '1px solid #2a2a4e', borderRadius: '16px', padding: '40px', maxWidth: '640px' },
-    title: { fontSize: '22px', fontWeight: 'bold', color: '#fff', margin: '0 0 28px' },
+    spinner: { width: '40px', height: '40px', border: '4px solid #d1dce8', borderTop: '4px solid #1f73b7', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
+    backBtn: { background: 'transparent', border: '1px solid #d1dce8', color: '#6b7a8d', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', marginBottom: '24px' },
+    card: { backgroundColor: '#ffffff', border: '1px solid #e0e7ef', borderRadius: '16px', padding: '40px', maxWidth: '640px', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' },
+    title: { fontSize: '22px', fontWeight: '700', color: '#040d15', margin: '0 0 28px' },
     row: { display: 'flex', gap: '16px' },
-    input: { width: '100%', padding: '10px 14px', backgroundColor: '#0f0f1a', border: '1px solid #2a2a4e', borderRadius: '8px', color: '#fff', fontSize: '14px', outline: 'none', boxSizing: 'border-box' },
-    inputErr: { border: '1px solid #e05555' },
+    input: { width: '100%', padding: '10px 14px', backgroundColor: '#f8fafc', border: '1px solid #d1dce8', borderRadius: '8px', color: '#040d15', fontSize: '14px', outline: 'none', boxSizing: 'border-box' },
+    inputErr: { border: '1px solid #dc2626' },
     textarea: { resize: 'vertical', fontFamily: 'inherit' },
-    submitBtn: { width: '100%', padding: '12px', backgroundColor: '#4a9eff', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', marginTop: '8px' },
-    toast: { position: 'fixed', bottom: '24px', right: '24px', backgroundColor: '#1a1a2e', border: '1px solid #2a2a4e', color: '#fff', padding: '12px 20px', borderRadius: '10px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)', zIndex: 1000, fontSize: '14px' },
+    submitBtn: { width: '100%', padding: '12px', backgroundColor: '#1f73b7', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: 'pointer', marginTop: '8px' },
+    toast: { position: 'fixed', bottom: '24px', right: '24px', backgroundColor: '#ffffff', border: '1px solid #e0e7ef', color: '#040d15', padding: '12px 20px', borderRadius: '10px', boxShadow: '0 4px 20px rgba(0,0,0,0.12)', zIndex: 1000, fontSize: '14px' },
 };
 
 export default ProductForm;

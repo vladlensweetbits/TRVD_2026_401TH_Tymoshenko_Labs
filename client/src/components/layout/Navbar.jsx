@@ -12,28 +12,26 @@ const Navbar = () => {
 
     return (
         <nav style={styles.nav}>
-            <div style={styles.logo}>
+            <div style={styles.left}>
                 <Link to="/" style={styles.logoLink}>ComTech</Link>
+                <div style={styles.links}>
+                    {user && <Link to="/orders" style={styles.link}>My Orders</Link>}
+                    {user?.role === 'admin' && (
+                        <Link to="/admin" style={styles.link}>Admin Panel</Link>
+                    )}
+                </div>
             </div>
 
-            <div style={styles.links}>
-                <Link to="/" style={styles.link}>Каталог</Link>
-
+            <div style={styles.right}>
                 {user ? (
                     <>
-                        <Link to="/orders" style={styles.link}>Мої замовлення</Link>
-                        {user.role === 'admin' && (
-                            <Link to="/admin" style={styles.link}>Адмін-панель</Link>
-                        )}
                         <span style={styles.username}>{user.name}</span>
-                        <button onClick={handleLogout} style={styles.logoutBtn}>
-                            Вихід
-                        </button>
+                        <button onClick={handleLogout} style={styles.logoutBtn}>Logout</button>
                     </>
                 ) : (
                     <>
-                        <Link to="/login" style={styles.link}>Вхід</Link>
-                        <Link to="/register" style={styles.registerBtn}>Реєстрація</Link>
+                        <Link to="/login" style={styles.link}>Login</Link>
+                        <Link to="/register" style={styles.registerBtn}>Register</Link>
                     </>
                 )}
             </div>
@@ -48,33 +46,35 @@ const styles = {
         alignItems: 'center',
         padding: '0 32px',
         height: '64px',
-        backgroundColor: '#1a1a2e',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+        backgroundColor: '#151a1e',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
         position: 'sticky',
         top: 0,
         zIndex: 100,
     },
-    logo: { fontSize: '20px', fontWeight: 'bold' },
-    logoLink: { color: '#ddecf8', textDecoration: 'none' },
+    left: { display: 'flex', alignItems: 'center', gap: '32px' },
+    logoLink: { color: '#ffffff', textDecoration: 'none', fontSize: '20px', fontWeight: '700' },
     links: { display: 'flex', alignItems: 'center', gap: '24px' },
-    link: { color: '#ccc', textDecoration: 'none', fontSize: '14px' },
-    username: { color: '##ddecf8', fontSize: '14px', fontWeight: 'bold' },
+    link: { color: '#ffffff', textDecoration: 'none', fontSize: '14px' },
+    right: { display: 'flex', alignItems: 'center', gap: '20px' },
+    username: { color: '#ffffff', fontSize: '14px', fontWeight: '600' },
     logoutBtn: {
         background: 'transparent',
-        border: '1px solid #e05555',
-        color: '#e05555',
+        border: '1px solid #ffffff',
+        color: '#ffffff',
         padding: '6px 16px',
         borderRadius: '6px',
         cursor: 'pointer',
         fontSize: '14px',
     },
     registerBtn: {
-        background: '#4a9eff',
-        color: 'white',
-        padding: '6px 16px',
+        backgroundColor: '#1f73b7',
+        color: '#ffffff',
+        padding: '7px 18px',
         borderRadius: '6px',
         textDecoration: 'none',
         fontSize: '14px',
+        fontWeight: '600',
     },
 };
 

@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../store/context/AuthContext.jsx';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../store/context/AuthContext';
 
 const Login = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
+
+    const registeredSuccess = location.state?.registered === true;
 
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [errors, setErrors] = useState({});
@@ -13,18 +16,21 @@ const Login = () => {
 
     const validate = () => {
         const newErrors = {};
-        if (!formData.email.trim()) newErrors.email = 'Email обов\'язковий';
-        if (!formData.password) newErrors.password = 'Пароль обов\'язковий';
+        if (!formData.email.trim()) newErrors.email = 'Email is required';
+        if (!formData.password) newErrors.password = 'Password is required';
         return newErrors;
     };
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
         setErrors({ ...errors, [e.target.name]: '' });
+        setApiError('');
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        e.stopPropagation();
+
         const validationErrors = validate();
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
@@ -33,11 +39,12 @@ const Login = () => {
 
         setLoading(true);
         setApiError('');
+
         try {
             await login(formData.email, formData.password);
             navigate('/');
         } catch (error) {
-            setApiError(error.response?.data?.message || 'Невірний email або пароль');
+            setApiError(error.response?.data?.message || 'Invalid email or password.');
         } finally {
             setLoading(false);
         }
@@ -46,12 +53,20 @@ const Login = () => {
     return (
         <div style={styles.container}>
             <div style={styles.card}>
-                <h2 style={styles.title}>Вхід</h2>
-                <p style={styles.subtitle}>Увійдіть до свого акаунту</p>
+                <h2 style={styles.title}>Sign In</h2>
+                <p style={styles.subtitle}>Welcome back to ComTech</p>
 
-                {apiError && <div style={styles.apiError}>{apiError}</div>}
+                {registeredSuccess && (
+                    <div style={styles.successMessage}>
+                        Your account has been created successfully. Now you can sign in.
+                    </div>
+                )}
 
-                <form onSubmit={handleSubmit}>
+                {apiError && (
+                    <div style={styles.apiError}>{apiError}</div>
+                )}
+
+                <form onSubmit={handleSubmit} noValidate>
                     <div style={styles.field}>
                         <label style={styles.label}>Email</label>
                         <input
@@ -66,26 +81,26 @@ const Login = () => {
                     </div>
 
                     <div style={styles.field}>
-                        <label style={styles.label}>Пароль</label>
+                        <label style={styles.label}>Password</label>
                         <input
                             name="password"
                             type="password"
                             value={formData.password}
                             onChange={handleChange}
-                            placeholder="Введіть пароль"
+                            placeholder="Enter your password"
                             style={{ ...styles.input, ...(errors.password ? styles.inputError : {}) }}
                         />
                         {errors.password && <span style={styles.error}>{errors.password}</span>}
                     </div>
 
                     <button type="submit" disabled={loading} style={styles.btn}>
-                        {loading ? 'Вхід...' : 'Увійти'}
+                        {loading ? 'Signing in...' : 'Sign In'}
                     </button>
                 </form>
 
                 <p style={styles.footer}>
-                    Ще немає акаунту?{' '}
-                    <Link to="/register" style={styles.footerLink}>Зареєструватись</Link>
+                    Don&apos;t have an account?{' '}
+                    <Link to="/register" style={styles.footerLink}>Register</Link>
                 </p>
             </div>
         </div>
@@ -98,58 +113,56 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#0f0f1a',
+        backgroundColor: '#f0f4f8',
         padding: '20px',
     },
     card: {
-        backgroundColor: '#1a1a2e',
+        backgroundColor: '#ffffff',
         padding: '40px',
         borderRadius: '16px',
         width: '100%',
         maxWidth: '440px',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-        border: '1px solid #2a2a4e',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+        border: '1px solid #e0e7ef',
     },
-    title: { color: '#fff', fontSize: '28px', fontWeight: 'bold', margin: '0 0 8px' },
-    subtitle: { color: '#888', fontSize: '14px', margin: '0 0 28px' },
+    title: { color: '#040d15', fontSize: '26px', fontWeight: '700', margin: '0 0 6px' },
+    subtitle: { color: '#6b7a8d', fontSize: '14px', margin: '0 0 28px' },
+    successMessage: {
+        backgroundColor: '#f0fdf4',
+        border: '1px solid #86efac',
+        color: '#16a34a',
+        padding: '10px 14px',
+        borderRadius: '8px',
+        marginBottom: '20px',
+        fontSize: '14px',
+    },
     apiError: {
-        backgroundColor: '#2d1515',
-        border: '1px solid #e05555',
-        color: '#e05555',
+        backgroundColor: '#fef2f2',
+        border: '1px solid #fca5a5',
+        color: '#dc2626',
         padding: '10px 14px',
         borderRadius: '8px',
         marginBottom: '20px',
         fontSize: '14px',
     },
     field: { marginBottom: '18px' },
-    label: { display: 'block', color: '#ccc', fontSize: '13px', marginBottom: '6px' },
+    label: { display: 'block', color: '#040d15', fontSize: '13px', fontWeight: '500', marginBottom: '6px' },
     input: {
-        width: '100%',
-        padding: '10px 14px',
-        backgroundColor: '#0f0f1a',
-        border: '1px solid #2a2a4e',
-        borderRadius: '8px',
-        color: '#fff',
-        fontSize: '14px',
-        outline: 'none',
-        boxSizing: 'border-box',
+        width: '100%', padding: '10px 14px',
+        backgroundColor: '#f8fafc', border: '1px solid #d1dce8',
+        borderRadius: '8px', color: '#040d15', fontSize: '14px',
+        outline: 'none', boxSizing: 'border-box',
     },
-    inputError: { border: '1px solid #e05555' },
-    error: { color: '#e05555', fontSize: '12px', marginTop: '4px', display: 'block' },
+    inputError: { border: '1px solid #dc2626' },
+    error: { color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'block' },
     btn: {
-        width: '100%',
-        padding: '12px',
-        backgroundColor: '#4a9eff',
-        color: '#fff',
-        border: 'none',
-        borderRadius: '8px',
-        fontSize: '15px',
-        fontWeight: 'bold',
-        cursor: 'pointer',
-        marginTop: '8px',
+        width: '100%', padding: '12px',
+        backgroundColor: '#1f73b7', color: '#ffffff',
+        border: 'none', borderRadius: '8px',
+        fontSize: '15px', fontWeight: '600', cursor: 'pointer', marginTop: '8px',
     },
-    footer: { color: '#888', fontSize: '13px', textAlign: 'center', marginTop: '20px' },
-    footerLink: { color: '#4a9eff', textDecoration: 'none' },
+    footer: { color: '#6b7a8d', fontSize: '13px', textAlign: 'center', marginTop: '20px' },
+    footerLink: { color: '#1f73b7', textDecoration: 'none', fontWeight: '600' },
 };
 
 export default Login;

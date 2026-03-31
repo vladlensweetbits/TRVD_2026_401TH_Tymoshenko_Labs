@@ -18,12 +18,12 @@ const Register = () => {
 
     const validate = () => {
         const newErrors = {};
-        if (!formData.name.trim()) newErrors.name = "Ім'я обов'язкове";
-        if (!formData.email.trim()) newErrors.email = 'Email обов\'язковий';
-        else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Невірний формат email';
-        if (!formData.password) newErrors.password = 'Пароль обов\'язковий';
-        else if (formData.password.length < 8) newErrors.password = 'Пароль мінімум 8 символів';
-        if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Паролі не співпадають';
+        if (!formData.name.trim()) newErrors.name = 'Name is required';
+        if (!formData.email.trim()) newErrors.email = 'Email is required';
+        else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Invalid email format';
+        if (!formData.password) newErrors.password = 'Password is required';
+        else if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
+        if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
         return newErrors;
     };
 
@@ -39,7 +39,6 @@ const Register = () => {
             setErrors(validationErrors);
             return;
         }
-
         setLoading(true);
         setApiError('');
         try {
@@ -48,9 +47,9 @@ const Register = () => {
                 email: formData.email,
                 password: formData.password,
             });
-            navigate('/login');
+            navigate('/login', { state: { registered: true } });
         } catch (error) {
-            setApiError(error.response?.data?.message || 'Помилка реєстрації');
+            setApiError(error.response?.data?.message || 'Registration failed. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -59,19 +58,19 @@ const Register = () => {
     return (
         <div style={styles.container}>
             <div style={styles.card}>
-                <h2 style={styles.title}>Реєстрація</h2>
-                <p style={styles.subtitle}>Створіть акаунт для покупок</p>
+                <h2 style={styles.title}>Create Account</h2>
+                <p style={styles.subtitle}>Register to start shopping</p>
 
                 {apiError && <div style={styles.apiError}>{apiError}</div>}
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} noValidate>
                     <div style={styles.field}>
-                        <label style={styles.label}>Ім'я</label>
+                        <label style={styles.label}>Full Name</label>
                         <input
                             name="name"
                             value={formData.name}
                             onChange={handleChange}
-                            placeholder="Введіть ваше ім'я"
+                            placeholder="Enter your full name"
                             style={{ ...styles.input, ...(errors.name ? styles.inputError : {}) }}
                         />
                         {errors.name && <span style={styles.error}>{errors.name}</span>}
@@ -91,39 +90,39 @@ const Register = () => {
                     </div>
 
                     <div style={styles.field}>
-                        <label style={styles.label}>Пароль</label>
+                        <label style={styles.label}>Password</label>
                         <input
                             name="password"
                             type="password"
                             value={formData.password}
                             onChange={handleChange}
-                            placeholder="Мінімум 8 символів"
+                            placeholder="Minimum 8 characters"
                             style={{ ...styles.input, ...(errors.password ? styles.inputError : {}) }}
                         />
                         {errors.password && <span style={styles.error}>{errors.password}</span>}
                     </div>
 
                     <div style={styles.field}>
-                        <label style={styles.label}>Підтвердіть пароль</label>
+                        <label style={styles.label}>Confirm Password</label>
                         <input
                             name="confirmPassword"
                             type="password"
                             value={formData.confirmPassword}
                             onChange={handleChange}
-                            placeholder="Повторіть пароль"
+                            placeholder="Repeat your password"
                             style={{ ...styles.input, ...(errors.confirmPassword ? styles.inputError : {}) }}
                         />
                         {errors.confirmPassword && <span style={styles.error}>{errors.confirmPassword}</span>}
                     </div>
 
                     <button type="submit" disabled={loading} style={styles.btn}>
-                        {loading ? 'Реєстрація...' : 'Зареєструватись'}
+                        {loading ? 'Creating account...' : 'Register'}
                     </button>
                 </form>
 
                 <p style={styles.footer}>
-                    Вже маєте акаунт?{' '}
-                    <Link to="/login" style={styles.footerLink}>Увійти</Link>
+                    Already have an account?{' '}
+                    <Link to="/login" style={styles.footerLink}>Sign in</Link>
                 </p>
             </div>
         </div>
@@ -136,58 +135,58 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#0f0f1a',
+        backgroundColor: '#f0f4f8',
         padding: '20px',
     },
     card: {
-        backgroundColor: '#1a1a2e',
+        backgroundColor: '#ffffff',
         padding: '40px',
         borderRadius: '16px',
         width: '100%',
         maxWidth: '440px',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-        border: '1px solid #2a2a4e',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+        border: '1px solid #e0e7ef',
     },
-    title: { color: '#fff', fontSize: '28px', fontWeight: 'bold', margin: '0 0 8px' },
-    subtitle: { color: '#888', fontSize: '14px', margin: '0 0 28px' },
+    title: { color: '#040d15', fontSize: '26px', fontWeight: '700', margin: '0 0 6px' },
+    subtitle: { color: '#6b7a8d', fontSize: '14px', margin: '0 0 28px' },
     apiError: {
-        backgroundColor: '#2d1515',
-        border: '1px solid #e05555',
-        color: '#e05555',
+        backgroundColor: '#fef2f2',
+        border: '1px solid #fca5a5',
+        color: '#dc2626',
         padding: '10px 14px',
         borderRadius: '8px',
         marginBottom: '20px',
         fontSize: '14px',
     },
     field: { marginBottom: '18px' },
-    label: { display: 'block', color: '#ccc', fontSize: '13px', marginBottom: '6px' },
+    label: { display: 'block', color: '#040d15', fontSize: '13px', fontWeight: '500', marginBottom: '6px' },
     input: {
         width: '100%',
         padding: '10px 14px',
-        backgroundColor: '#0f0f1a',
-        border: '1px solid #2a2a4e',
+        backgroundColor: '#f8fafc',
+        border: '1px solid #d1dce8',
         borderRadius: '8px',
-        color: '#fff',
+        color: '#040d15',
         fontSize: '14px',
         outline: 'none',
         boxSizing: 'border-box',
     },
-    inputError: { border: '1px solid #e05555' },
-    error: { color: '#e05555', fontSize: '12px', marginTop: '4px', display: 'block' },
+    inputError: { border: '1px solid #dc2626' },
+    error: { color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'block' },
     btn: {
         width: '100%',
         padding: '12px',
-        backgroundColor: '#4a9eff',
-        color: '#fff',
+        backgroundColor: '#1f73b7',
+        color: '#ffffff',
         border: 'none',
         borderRadius: '8px',
         fontSize: '15px',
-        fontWeight: 'bold',
+        fontWeight: '600',
         cursor: 'pointer',
         marginTop: '8px',
     },
-    footer: { color: '#888', fontSize: '13px', textAlign: 'center', marginTop: '20px' },
-    footerLink: { color: '#4a9eff', textDecoration: 'none' },
+    footer: { color: '#6b7a8d', fontSize: '13px', textAlign: 'center', marginTop: '20px' },
+    footerLink: { color: '#1f73b7', textDecoration: 'none', fontWeight: '600' },
 };
 
 export default Register;
