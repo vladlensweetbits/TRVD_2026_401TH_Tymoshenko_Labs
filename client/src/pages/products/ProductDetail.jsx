@@ -20,18 +20,16 @@ const ProductDetail = () => {
 
     useEffect(() => {
         const fetch = async () => {
-            // FIX: Guard against 'undefined' or empty IDs
             if (!id || id === 'undefined') {
-                setError('Невірний ідентифікатор товару');
+                setError('Invalid product ID');
                 setLoading(false);
                 return;
             }
-
             try {
                 const res = await productService.getById(id);
                 setProduct(res.data);
             } catch {
-                setError('Товар не знайдено');
+                setError('Product not found');
             } finally {
                 setLoading(false);
             }
@@ -42,10 +40,10 @@ const ProductDetail = () => {
     const handleDelete = async () => {
         try {
             await productService.delete(id);
-            showToast('✅ Товар видалено');
+            showToast('Product deleted successfully');
             setTimeout(() => navigate('/'), 1500);
         } catch {
-            showToast('❌ Помилка видалення');
+            showToast('Failed to delete product');
             setConfirmDelete(false);
         }
     };
@@ -58,8 +56,8 @@ const ProductDetail = () => {
 
     if (error || !product) return (
         <div style={s.page}>
-            <div style={s.errorBox}>{error || 'Помилка завантаження'}</div>
-            <button style={s.backBtn} onClick={() => navigate('/')}>← Назад</button>
+            <div style={s.errorBox}>{error || 'Failed to load product'}</div>
+            <button style={s.backBtn} onClick={() => navigate('/')}>Back to Catalogue</button>
         </div>
     );
 
@@ -70,37 +68,36 @@ const ProductDetail = () => {
             {confirmDelete && (
                 <div style={s.overlay}>
                     <div style={s.modal}>
-                        <p style={s.modalText}>Ви впевнені, що хочете видалити цей товар?</p>
+                        <p style={s.modalText}>Are you sure you want to delete this product?</p>
                         <div style={s.modalBtns}>
-                            <button style={s.cancelBtn} onClick={() => setConfirmDelete(false)}>Скасувати</button>
-                            <button style={s.deleteBtn} onClick={handleDelete}>Видалити</button>
+                            <button style={s.cancelBtn} onClick={() => setConfirmDelete(false)}>Cancel</button>
+                            <button style={s.deleteBtn} onClick={handleDelete}>Delete</button>
                         </div>
                     </div>
                 </div>
             )}
 
-            <button style={s.backBtn} onClick={() => navigate('/')}>← Каталог</button>
+            <button style={s.backBtn} onClick={() => navigate('/')}>Back to Catalogue</button>
 
             <div style={s.card}>
                 <div style={s.topRow}>
                     <span style={s.category}>{product.category}</span>
                     <span style={product.stock > 0 ? s.inStock : s.outStock}>
-                        {product.stock > 0 ? `В наявності: ${product.stock} шт.` : 'Немає в наявності'}
+                        {product.stock > 0 ? `In stock: ${product.stock} pcs.` : 'Out of stock'}
                     </span>
                 </div>
 
                 <h1 style={s.name}>{product.name}</h1>
-                <p style={s.price}>{product.price?.toLocaleString()} ₴</p>
+                <p style={s.price}>${product.price?.toLocaleString()}</p>
 
                 <div style={s.section}>
-                    <h3 style={s.sectionTitle}>Опис</h3>
+                    <h3 style={s.sectionTitle}>Description</h3>
                     <p style={s.desc}>{product.description}</p>
                 </div>
 
-                {/* Safety check for specs */}
                 {product.specs && (
                     <div style={s.section}>
-                        <h3 style={s.sectionTitle}>Характеристики</h3>
+                        <h3 style={s.sectionTitle}>Specifications</h3>
                         <table style={s.table}>
                             <tbody>
                             {product.specs instanceof Map || Array.isArray(product.specs) ? (
@@ -125,17 +122,17 @@ const ProductDetail = () => {
 
                 {product.rating > 0 && (
                     <div style={s.section}>
-                        <span style={s.rating}>⭐{product.rating.toFixed(1)} / 5</span>
+                        <span style={s.rating}>Rating: {product.rating.toFixed(1)} / 5</span>
                     </div>
                 )}
 
                 {user?.role === 'admin' && (
                     <div style={s.adminActions}>
                         <button style={s.editBtn} onClick={() => navigate(`/products/${id}/edit`)}>
-                            Редагувати
+                            Edit Product
                         </button>
                         <button style={s.deleteBtn} onClick={() => setConfirmDelete(true)}>
-                            Видалити
+                            Delete Product
                         </button>
                     </div>
                 )}
@@ -144,36 +141,35 @@ const ProductDetail = () => {
     );
 };
 
-// ... (s styles remain exactly the same as you provided)
 const s = {
-    page: { minHeight: '100vh', backgroundColor: '#0f0f1a', padding: '32px', color: '#fff' },
+    page: { minHeight: '100vh', backgroundColor: '#f0f4f8', padding: '32px', color: '#040d15' },
     center: { display: 'flex', justifyContent: 'center', padding: '80px 0' },
-    spinner: { width: '40px', height: '40px', border: '4px solid #2a2a4e', borderTop: '4px solid #4a9eff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
-    backBtn: { background: 'transparent', border: '1px solid #2a2a4e', color: '#888', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', marginBottom: '24px' },
-    card: { backgroundColor: '#1a1a2e', border: '1px solid #2a2a4e', borderRadius: '16px', padding: '40px', maxWidth: '720px' },
+    spinner: { width: '40px', height: '40px', border: '4px solid #d1dce8', borderTop: '4px solid #1f73b7', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
+    backBtn: { background: 'transparent', border: '1px solid #d1dce8', color: '#6b7a8d', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', marginBottom: '24px' },
+    card: { backgroundColor: '#ffffff', border: '1px solid #e0e7ef', borderRadius: '16px', padding: '40px', maxWidth: '720px', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' },
     topRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' },
-    category: { fontSize: '12px', color: '#4a9eff', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '1px' },
-    inStock: { fontSize: '13px', color: '#4caf50' },
-    outStock: { fontSize: '13px', color: '#e05555' },
-    name: { fontSize: '28px', fontWeight: 'bold', margin: '0 0 12px', color: '#fff' },
-    price: { fontSize: '24px', fontWeight: 'bold', color: '#4a9eff', margin: '0 0 24px' },
+    category: { fontSize: '12px', color: '#1f73b7', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '1px' },
+    inStock: { fontSize: '13px', color: '#16a34a' },
+    outStock: { fontSize: '13px', color: '#dc2626' },
+    name: { fontSize: '28px', fontWeight: '700', margin: '0 0 12px', color: '#040d15' },
+    price: { fontSize: '24px', fontWeight: '700', color: '#1f73b7', margin: '0 0 24px' },
     section: { marginBottom: '24px' },
-    sectionTitle: { fontSize: '14px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' },
-    desc: { color: '#ccc', lineHeight: '1.7', fontSize: '15px' },
+    sectionTitle: { fontSize: '13px', color: '#6b7a8d', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px', fontWeight: '600' },
+    desc: { color: '#040d15', lineHeight: '1.7', fontSize: '15px' },
     table: { width: '100%', borderCollapse: 'collapse' },
-    tdKey: { padding: '8px 12px', color: '#888', fontSize: '14px', borderBottom: '1px solid #2a2a4e', width: '40%' },
-    tdVal: { padding: '8px 12px', color: '#fff', fontSize: '14px', borderBottom: '1px solid #2a2a4e' },
-    rating: { fontSize: '16px', color: '#ffd700' },
-    adminActions: { display: 'flex', gap: '12px', marginTop: '32px', paddingTop: '24px', borderTop: '1px solid #2a2a4e' },
-    editBtn: { padding: '10px 24px', backgroundColor: '#2a2a4e', border: 'none', color: '#fff', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' },
-    deleteBtn: { padding: '10px 24px', backgroundColor: '#e05555', border: 'none', color: '#fff', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' },
-    errorBox: { backgroundColor: '#2d1515', border: '1px solid #e05555', color: '#e05555', padding: '12px 16px', borderRadius: '8px', marginBottom: '20px' },
-    toast: { position: 'fixed', bottom: '24px', right: '24px', backgroundColor: '#1a1a2e', border: '1px solid #2a2a4e', color: '#fff', padding: '12px 20px', borderRadius: '10px', boxShadow: '0 4px 20px rgba(0,0,0,0.4)', zIndex: 1000, fontSize: '14px' },
-    overlay: { position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999 },
-    modal: { backgroundColor: '#1a1a2e', border: '1px solid #2a2a4e', borderRadius: '12px', padding: '32px', maxWidth: '360px', width: '90%' },
-    modalText: { color: '#fff', fontSize: '16px', marginBottom: '24px', textAlign: 'center' },
+    tdKey: { padding: '8px 12px', color: '#6b7a8d', fontSize: '14px', borderBottom: '1px solid #e0e7ef', width: '40%' },
+    tdVal: { padding: '8px 12px', color: '#040d15', fontSize: '14px', borderBottom: '1px solid #e0e7ef' },
+    rating: { fontSize: '16px', color: '#1f73b7', fontWeight: '600' },
+    adminActions: { display: 'flex', gap: '12px', marginTop: '32px', paddingTop: '24px', borderTop: '1px solid #e0e7ef' },
+    editBtn: { padding: '10px 24px', backgroundColor: '#f0f4f8', border: '1px solid #d1dce8', color: '#040d15', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' },
+    deleteBtn: { padding: '10px 24px', backgroundColor: '#dc2626', border: 'none', color: '#fff', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' },
+    errorBox: { backgroundColor: '#fef2f2', border: '1px solid #fca5a5', color: '#dc2626', padding: '12px 16px', borderRadius: '8px', marginBottom: '20px' },
+    toast: { position: 'fixed', bottom: '24px', right: '24px', backgroundColor: '#ffffff', border: '1px solid #e0e7ef', color: '#040d15', padding: '12px 20px', borderRadius: '10px', boxShadow: '0 4px 20px rgba(0,0,0,0.12)', zIndex: 1000, fontSize: '14px' },
+    overlay: { position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999 },
+    modal: { backgroundColor: '#ffffff', border: '1px solid #e0e7ef', borderRadius: '12px', padding: '32px', maxWidth: '360px', width: '90%', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' },
+    modalText: { color: '#040d15', fontSize: '16px', marginBottom: '24px', textAlign: 'center' },
     modalBtns: { display: 'flex', gap: '12px', justifyContent: 'center' },
-    cancelBtn: { padding: '10px 24px', backgroundColor: '#2a2a4e', border: 'none', color: '#fff', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' },
+    cancelBtn: { padding: '10px 24px', backgroundColor: '#f0f4f8', border: '1px solid #d1dce8', color: '#040d15', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' },
 };
 
 export default ProductDetail;
