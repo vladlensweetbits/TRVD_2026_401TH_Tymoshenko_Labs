@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../store/context/AuthContext.jsx';
 import productService from '../../services/api/productService';
+import { useCart } from '../../store/context/CartContext.jsx';
 
 const CATEGORIES = ['CPU', 'GPU', 'RAM', 'Storage', 'Motherboard', 'PSU', 'Case', 'Cooling'];
 
 const ProductList = () => {
     const { user } = useAuth();
+    const { addToCart } = useCart();
     const navigate = useNavigate();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -15,6 +17,14 @@ const ProductList = () => {
     const [confirmDelete, setConfirmDelete] = useState(null);
     const [search, setSearch] = useState('');
     const [category, setCategory] = useState('');
+    const [addHovered, setAddHovered] = useState(false);
+    const [searchHovered, setSearchHovered] = useState(false);
+    const [cancelHovered, setCancelHovered] = useState(false);
+    const [deleteHovered, setDeleteHovered] = useState(false);
+    const [hoveredEdit, setHoveredEdit] = useState(null);
+    const [hoveredDelete, setHoveredDelete] = useState(null);
+    const [hoveredView, setHoveredView] = useState(null);
+    const [hoveredCart, setHoveredCart] = useState(null);
 
     const showToast = (msg) => {
         setToast(msg);
@@ -25,10 +35,14 @@ const ProductList = () => {
         setLoading(true);
         setError('');
         try {
-            const params = {};
-            if (category) params.category = category;
-            if (search) params.search = search;
-            const res = await productService.getAll(params);
+            let res;
+            if (search) {
+                res = await productService.search(search);
+            } else {
+                const params = {};
+                if (category) params.category = category;
+                res = await productService.getAll(params);
+            }
             setProducts(res.data || []);
         } catch {
             setError('Failed to load products');
@@ -65,8 +79,22 @@ const ProductList = () => {
                     <div style={s.modal}>
                         <p style={s.modalText}>Are you sure you want to delete this product?</p>
                         <div style={s.modalBtns}>
-                            <button style={s.cancelBtn} onClick={() => setConfirmDelete(null)}>Cancel</button>
-                            <button style={s.deleteBtn} onClick={() => handleDelete(confirmDelete)}>Delete</button>
+                            <button
+                                onMouseEnter={() => setCancelHovered(true)}
+                                onMouseLeave={() => setCancelHovered(false)}
+                                style={{ ...s.cancelBtn, ...(cancelHovered ? s.cancelBtnHover : {}) }}
+                                onClick={() => setConfirmDelete(null)}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onMouseEnter={() => setDeleteHovered(true)}
+                                onMouseLeave={() => setDeleteHovered(false)}
+                                style={{ ...s.deleteBtn, ...(deleteHovered ? s.deleteBtnHover : {}) }}
+                                onClick={() => handleDelete(confirmDelete)}
+                            >
+                                Delete
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -75,7 +103,12 @@ const ProductList = () => {
             <div style={s.header}>
                 <h1 style={s.title}>Product Catalogue</h1>
                 {user?.role === 'admin' && (
-                    <button style={s.addBtn} onClick={() => navigate('/products/new')}>
+                    <button
+                        onMouseEnter={() => setAddHovered(true)}
+                        onMouseLeave={() => setAddHovered(false)}
+                        style={{ ...s.addBtn, ...(addHovered ? s.addBtnHover : {}) }}
+                        onClick={() => navigate('/products/new')}
+                    >
                         + Add Product
                     </button>
                 )}
@@ -89,7 +122,14 @@ const ProductList = () => {
                         value={search}
                         onChange={e => setSearch(e.target.value)}
                     />
-                    <button type="submit" style={s.searchBtn}>Search</button>
+                    <button
+                        type="submit"
+                        onMouseEnter={() => setSearchHovered(true)}
+                        onMouseLeave={() => setSearchHovered(false)}
+                        style={{ ...s.searchBtn, ...(searchHovered ? s.searchBtnHover : {}) }}
+                    >
+                        Search
+                    </button>
                 </form>
                 <select style={s.select} value={category} onChange={e => setCategory(e.target.value)}>
                     <option value="">All Categories</option>
@@ -109,6 +149,13 @@ const ProductList = () => {
                     const productId = product._id || product.id || index;
                     return (
                         <div key={productId} style={s.card}>
+                            {product.images && product.images.length > 0 && (
+                                <img
+                                    src={product.images[0]}
+                                    alt={product.name}
+                                    style={s.cardImage}
+                                />
+                            )}
                             <div style={s.cardCategory}>{product.category}</div>
                             <h3 style={s.cardName}>{product.name}</h3>
                             <p style={s.cardDesc}>
@@ -122,13 +169,48 @@ const ProductList = () => {
                                 </span>
                             </div>
                             <div style={s.cardActions}>
-                                <Link to={`/products/${productId}`} style={s.viewBtn}>View Details</Link>
+                                <Link
+                                    to={`/products/${productId}`}
+                                    onMouseEnter={() => setHoveredView(productId)}
+                                    onMouseLeave={() => setHoveredView(null)}
+                                    style={{ ...s.viewBtn, ...(hoveredView === productId ? s.viewBtnHover : {}) }}
+                                >
+                                    View Details
+                                </Link>
+                                {user && (
+                                    <button
+                                        onMouseEnter={() => setHoveredCart(productId)}
+                                        onMouseLeave={() => setHoveredCart(null)}
+                                        style={{ ...s.cartBtn, ...(hoveredCart === productId ? s.cartBtnHover : {}) }}
+                                        onClick={async (e) => {
+                                            e.preventDefault();
+                                            try {
+                                                await addToCart(productId);
+                                                showToast('Added to cart');
+                                            } catch {
+                                                showToast('Failed to add to cart');
+                                            }
+                                        }}
+                                    >
+                                        Add to Cart
+                                    </button>
+                                )}
                                 {user?.role === 'admin' && (
                                     <>
-                                        <button style={s.editBtn} onClick={() => navigate(`/products/${productId}/edit`)}>
+                                        <button
+                                            onMouseEnter={() => setHoveredEdit(productId)}
+                                            onMouseLeave={() => setHoveredEdit(null)}
+                                            style={{ ...s.editBtn, ...(hoveredEdit === productId ? s.editBtnHover : {}) }}
+                                            onClick={() => navigate(`/products/${productId}/edit`)}
+                                        >
                                             Edit
                                         </button>
-                                        <button style={s.deleteCardBtn} onClick={() => setConfirmDelete(productId)}>
+                                        <button
+                                            onMouseEnter={() => setHoveredDelete(productId)}
+                                            onMouseLeave={() => setHoveredDelete(null)}
+                                            style={{ ...s.deleteCardBtn, ...(hoveredDelete === productId ? s.deleteCardBtnHover : {}) }}
+                                            onClick={() => setConfirmDelete(productId)}
+                                        >
                                             Delete
                                         </button>
                                     </>
@@ -146,14 +228,17 @@ const s = {
     page: { minHeight: '100vh', backgroundColor: '#f0f4f8', padding: '32px', color: '#040d15' },
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' },
     title: { fontSize: '28px', fontWeight: '700', color: '#040d15', margin: 0 },
-    addBtn: { backgroundColor: '#1f73b7', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' },
+    addBtn: { backgroundColor: '#1f73b7', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '600', transition: 'background-color 0.2s ease' },
+    addBtnHover: { backgroundColor: '#185d99' },
     filters: { display: 'flex', gap: '16px', marginBottom: '28px', flexWrap: 'wrap' },
     searchForm: { display: 'flex', gap: '8px', flex: 1 },
     searchInput: { flex: 1, padding: '10px 14px', backgroundColor: '#ffffff', border: '1px solid #d1dce8', borderRadius: '8px', color: '#040d15', fontSize: '14px', minWidth: '200px', outline: 'none' },
-    searchBtn: { padding: '10px 20px', backgroundColor: '#1f73b7', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' },
+    searchBtn: { padding: '10px 20px', backgroundColor: '#1f73b7', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', transition: 'background-color 0.2s ease' },
+    searchBtnHover: { backgroundColor: '#185d99' },
     select: { padding: '10px 14px', backgroundColor: '#ffffff', border: '1px solid #d1dce8', borderRadius: '8px', color: '#040d15', fontSize: '14px', cursor: 'pointer', outline: 'none' },
     grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' },
     card: { backgroundColor: '#ffffff', borderRadius: '12px', padding: '20px', border: '1px solid #e0e7ef', display: 'flex', flexDirection: 'column', gap: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' },
+    cardImage: { width: '100%', height: '200px', objectFit: 'cover', borderRadius: '8px' },
     cardCategory: { fontSize: '11px', color: '#1f73b7', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '1px' },
     cardName: { fontSize: '16px', fontWeight: '700', color: '#040d15', margin: 0 },
     cardDesc: { fontSize: '13px', color: '#6b7a8d', margin: 0, lineHeight: '1.5' },
@@ -162,9 +247,12 @@ const s = {
     inStock: { fontSize: '12px', color: '#16a34a' },
     outStock: { fontSize: '12px', color: '#dc2626' },
     cardActions: { display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' },
-    viewBtn: { padding: '7px 14px', backgroundColor: '#f0f4f8', border: '1px solid #1f73b7', color: '#1f73b7', borderRadius: '6px', textDecoration: 'none', fontSize: '13px' },
-    editBtn: { padding: '7px 14px', backgroundColor: '#f0f4f8', border: '1px solid #d1dce8', color: '#040d15', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' },
-    deleteCardBtn: { padding: '7px 14px', backgroundColor: 'transparent', border: '1px solid #dc2626', color: '#dc2626', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' },
+    viewBtn: { padding: '7px 14px', backgroundColor: '#f0f4f8', border: '1px solid #1f73b7', color: '#1f73b7', borderRadius: '6px', textDecoration: 'none', fontSize: '13px', transition: 'all 0.2s ease' },
+    viewBtnHover: { backgroundColor: '#1f73b7', color: '#ffffff' },
+    editBtn: { padding: '7px 14px', backgroundColor: '#f0f4f8', border: '1px solid #d1dce8', color: '#040d15', borderRadius: '6px', fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s ease' },
+    editBtnHover: { backgroundColor: '#e2e8f0', borderColor: '#94a3b8' },
+    deleteCardBtn: { padding: '7px 14px', backgroundColor: 'transparent', border: '1px solid #dc2626', color: '#dc2626', borderRadius: '6px', fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s ease' },
+    deleteCardBtnHover: { backgroundColor: '#dc2626', color: '#ffffff' },
     center: { display: 'flex', justifyContent: 'center', padding: '60px 0' },
     spinner: { width: '40px', height: '40px', border: '4px solid #d1dce8', borderTop: '4px solid #1f73b7', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
     empty: { color: '#6b7a8d', fontSize: '16px' },
@@ -174,8 +262,12 @@ const s = {
     modal: { backgroundColor: '#ffffff', border: '1px solid #e0e7ef', borderRadius: '12px', padding: '32px', maxWidth: '360px', width: '90%', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' },
     modalText: { color: '#040d15', fontSize: '16px', marginBottom: '24px', textAlign: 'center' },
     modalBtns: { display: 'flex', gap: '12px', justifyContent: 'center' },
-    cancelBtn: { padding: '10px 24px', backgroundColor: '#f0f4f8', border: '1px solid #d1dce8', color: '#040d15', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' },
-    deleteBtn: { padding: '10px 24px', backgroundColor: '#dc2626', border: 'none', color: '#fff', borderRadius: '8px', cursor: 'pointer', fontSize: '14px' },
+    cancelBtn: { padding: '10px 24px', backgroundColor: '#f0f4f8', border: '1px solid #d1dce8', color: '#040d15', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', transition: 'all 0.2s ease' },
+    cancelBtnHover: { backgroundColor: '#e2e8f0', borderColor: '#94a3b8' },
+    deleteBtn: { padding: '10px 24px', backgroundColor: '#dc2626', border: 'none', color: '#fff', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', transition: 'background-color 0.2s ease' },
+    deleteBtnHover: { backgroundColor: '#b91c1c' },
+    cartBtn: { padding: '7px 14px', backgroundColor: 'transparent', border: '1px solid #1f73b7', color: '#1f73b7', borderRadius: '6px', fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s ease' },
+    cartBtnHover: { backgroundColor: '#1f73b7', color: '#ffffff' },
 };
 
 export default ProductList;
