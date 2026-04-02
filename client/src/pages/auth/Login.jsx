@@ -13,6 +13,7 @@ const Login = () => {
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
     const [apiError, setApiError] = useState('');
+    const [btnHovered, setBtnHovered] = useState(false);
 
     const validate = () => {
         const newErrors = {};
@@ -93,7 +94,13 @@ const Login = () => {
                         {errors.password && <span style={styles.error}>{errors.password}</span>}
                     </div>
 
-                    <button type="submit" disabled={loading} style={styles.btn}>
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        onMouseEnter={() => setBtnHovered(true)}
+                        onMouseLeave={() => setBtnHovered(false)}
+                        style={{ ...styles.btn, ...(btnHovered && !loading ? styles.btnHover : {}) }}
+                    >
                         {loading ? 'Signing in...' : 'Sign In'}
                     </button>
                 </form>
@@ -160,7 +167,9 @@ const styles = {
         backgroundColor: '#1f73b7', color: '#ffffff',
         border: 'none', borderRadius: '8px',
         fontSize: '15px', fontWeight: '600', cursor: 'pointer', marginTop: '8px',
+        transition: 'background-color 0.2s ease',
     },
+    btnHover: { backgroundColor: '#185d99' },
     footer: { color: '#6b7a8d', fontSize: '13px', textAlign: 'center', marginTop: '20px' },
     footerLink: { color: '#1f73b7', textDecoration: 'none', fontWeight: '600' },
 };
