@@ -85,7 +85,7 @@ const Cart = () => {
                                     onMouseEnter={() => setHoveredCheckout(true)}
                                     onMouseLeave={() => setHoveredCheckout(false)}
                                     style={{ ...s.checkoutBtn, ...(hoveredCheckout ? s.checkoutBtnHover : {}) }}
-                                    onClick={() => navigate('/orders/new')}
+                                    onClick={() => navigate('/checkout')}
                                 >
                                     Proceed to Checkout
                                 </button>
