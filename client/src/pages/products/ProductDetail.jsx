@@ -76,6 +76,8 @@ const ProductDetail = () => {
         </div>
     );
 
+    const outOfStock = product.stock === 0;
+
     return (
         <div style={s.page}>
             {toast && <div style={s.toast}>{toast}</div>}
@@ -119,8 +121,8 @@ const ProductDetail = () => {
                 <div style={s.card}>
                     <div style={s.topRow}>
                         <span style={s.category}>{product.category}</span>
-                        <span style={product.stock > 0 ? s.inStock : s.outStock}>
-                            {product.stock > 0 ? `In stock: ${product.stock} pcs.` : 'Out of stock'}
+                        <span style={outOfStock ? s.outStock : s.inStock}>
+                            {outOfStock ? 'Out of stock' : `In stock: ${product.stock} pcs.`}
                         </span>
                     </div>
 
@@ -130,7 +132,10 @@ const ProductDetail = () => {
                         <img
                             src={product.images[0]}
                             alt={product.name}
-                            style={s.productImage}
+                            style={{
+                                ...s.productImage,
+                                ...(outOfStock ? s.productImageGrey : {}),
+                            }}
                         />
                     )}
 
@@ -140,17 +145,26 @@ const ProductDetail = () => {
                         <button
                             onMouseEnter={() => setCartHovered(true)}
                             onMouseLeave={() => setCartHovered(false)}
-                            style={{ ...s.addCartBtn, ...(cartHovered ? s.addCartBtnHover : {}) }}
+                            disabled={outOfStock}
+                            style={{
+                                ...s.addCartBtn,
+                                ...(cartHovered && !outOfStock ? s.addCartBtnHover : {}),
+                                ...(outOfStock ? s.addCartBtnDisabled : {}),
+                            }}
                             onClick={async () => {
+                                if (outOfStock) {
+                                    showToast('This item is out of stock');
+                                    return;
+                                }
                                 try {
                                     await addToCart(id);
                                     showToast('Added to cart');
-                                } catch (err) {
-                                    showToast(err.message || 'Failed to add to cart');
+                                } catch {
+                                    showToast('This item is out of stock');
                                 }
                             }}
                         >
-                            Add to Cart
+                            {outOfStock ? 'Out of Stock' : 'Add to Cart'}
                         </button>
                     )}
 
@@ -229,10 +243,12 @@ const s = {
     inStock: { fontSize: '13px', color: '#16a34a' },
     outStock: { fontSize: '13px', color: '#dc2626' },
     name: { fontSize: '28px', fontWeight: '700', margin: '0 0 16px', color: '#040d15' },
-    productImage: { width: '100%', height: '360px', objectFit: 'cover', borderRadius: '12px', marginBottom: '24px' },
+    productImage: { width: '100%', height: '360px', objectFit: 'cover', borderRadius: '12px', marginBottom: '24px', transition: 'filter 0.2s ease' },
+    productImageGrey: { filter: 'grayscale(100%)', opacity: 0.6 },
     price: { fontSize: '24px', fontWeight: '700', color: '#1f73b7', margin: '0 0 16px' },
     addCartBtn: { padding: '12px 32px', backgroundColor: '#1f73b7', border: 'none', color: '#fff', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: 'pointer', marginBottom: '24px', transition: 'background-color 0.2s ease' },
     addCartBtnHover: { backgroundColor: '#145082' },
+    addCartBtnDisabled: { backgroundColor: '#d1dce8', color: '#94a3b8', cursor: 'not-allowed', opacity: 0.7 },
     section: { marginBottom: '24px' },
     sectionTitle: { fontSize: '13px', color: '#6b7a8d', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px', fontWeight: '600' },
     desc: { color: '#040d15', lineHeight: '1.7', fontSize: '15px' },

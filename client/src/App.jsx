@@ -11,6 +11,8 @@ import ProductForm from './pages/products/ProductForm';
 import Cart from './pages/cart/Cart';
 import Checkout from './pages/checkout/Checkout';
 import OrderSuccess from './pages/checkout/OrderSuccess';
+import Orders from './pages/orders/Orders';
+import OrderDetail from './pages/orders/OrderDetail';
 
 function App() {
     return (
@@ -37,6 +39,12 @@ function App() {
                         } />
                         <Route path="/order-success" element={
                             <ProtectedRoute><OrderSuccess /></ProtectedRoute>
+                        } />
+                        <Route path="/orders" element={
+                            <ProtectedRoute><Orders /></ProtectedRoute>
+                        } />
+                        <Route path="/orders/:id" element={
+                            <ProtectedRoute><OrderDetail /></ProtectedRoute>
                         } />
                     </Routes>
                 </CartProvider>
