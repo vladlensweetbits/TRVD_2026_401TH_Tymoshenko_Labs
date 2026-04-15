@@ -13,6 +13,7 @@ import Checkout from './pages/checkout/Checkout';
 import OrderSuccess from './pages/checkout/OrderSuccess';
 import Orders from './pages/orders/Orders';
 import OrderDetail from './pages/orders/OrderDetail';
+import AdminPanel from './pages/admin/AdminPanel';
 
 function App() {
     return (
@@ -26,10 +27,10 @@ function App() {
                         <Route path="/register" element={<Register />} />
                         <Route path="/products/:id" element={<ProductDetail />} />
                         <Route path="/products/:id/edit" element={
-                            <ProtectedRoute workerOrAdmin={true}><ProductForm /></ProtectedRoute>
+                            <ProtectedRoute employeeOrAdmin={true}><ProductForm /></ProtectedRoute>
                         } />
                         <Route path="/products/new" element={
-                            <ProtectedRoute workerOrAdmin={true}><ProductForm /></ProtectedRoute>
+                            <ProtectedRoute employeeOrAdmin={true}><ProductForm /></ProtectedRoute>
                         } />
                         <Route path="/cart" element={
                             <ProtectedRoute><Cart /></ProtectedRoute>
@@ -45,6 +46,9 @@ function App() {
                         } />
                         <Route path="/orders/:id" element={
                             <ProtectedRoute><OrderDetail /></ProtectedRoute>
+                        } />
+                        <Route path="/admin" element={
+                            <ProtectedRoute adminOnly={true}><AdminPanel /></ProtectedRoute>
                         } />
                     </Routes>
                 </CartProvider>

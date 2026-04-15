@@ -19,6 +19,8 @@ const Navbar = () => {
         navigate('/login');
     };
 
+    const showRoleBadge = user?.role === 'admin' || user?.role === 'employee';
+
     return (
         <nav style={styles.nav}>
             <div style={styles.left}>
@@ -28,6 +30,7 @@ const Navbar = () => {
             <div style={styles.right}>
                 {user ? (
                     <>
+                        {/* Admin Panel — admin only */}
                         {user.role === 'admin' && (
                             <Link
                                 to="/admin"
@@ -38,6 +41,7 @@ const Navbar = () => {
                                 Admin Panel
                             </Link>
                         )}
+                        {/* My Orders — everyone */}
                         <Link
                             to="/orders"
                             onMouseEnter={() => setOrdersHovered(true)}
@@ -46,6 +50,7 @@ const Navbar = () => {
                         >
                             My Orders
                         </Link>
+                        {/* Cart — everyone */}
                         <Link
                             to="/cart"
                             onMouseEnter={() => setCartHovered(true)}
@@ -57,6 +62,12 @@ const Navbar = () => {
                                 <span style={styles.cartBadge}>{itemCount}</span>
                             )}
                         </Link>
+                        {/* Role badge — admin and employee only */}
+                        {showRoleBadge && (
+                            <span style={styles.roleBadge}>
+                                {user.role}
+                            </span>
+                        )}
                         <span style={styles.username}>{user.name}</span>
                         <button
                             onClick={handleLogout}
@@ -134,6 +145,7 @@ const styles = {
         alignItems: 'center',
         justifyContent: 'center',
     },
+    roleBadge: { color: '#ffffff', fontSize: '14px', fontWeight: '600', textTransform: 'capitalize' },
     username: { color: '#ffffff', fontSize: '14px', fontWeight: '600' },
     logoutBtn: {
         backgroundColor: 'transparent',

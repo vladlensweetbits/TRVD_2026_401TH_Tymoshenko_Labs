@@ -6,8 +6,11 @@ const { protect, adminOnly } = require('../middleware/auth');
 router.post('/register', (req, res) => userController.register(req, res));
 router.post('/login', (req, res) => userController.login(req, res));
 
+router.get('/search/users', protect, adminOnly, (req, res) => userController.searchUsers(req, res));
+
 router.get('/:id', protect, (req, res) => userController.getUserById(req, res));
 router.put('/:id', protect, (req, res) => userController.updateUser(req, res));
+router.patch('/:id/role', protect, adminOnly, (req, res) => userController.updateRole(req, res));
 router.patch('/:id/wishlist/add', protect, (req, res) => userController.addToWishlist(req, res));
 router.patch('/:id/wishlist/remove', protect, (req, res) => userController.removeFromWishlist(req, res));
 

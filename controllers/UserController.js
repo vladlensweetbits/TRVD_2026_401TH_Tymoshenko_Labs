@@ -74,6 +74,29 @@ class UserController {
             res.status(400).json({ success: false, message: error.message });
         }
     }
+
+    async updateRole(req, res) {
+        try {
+            const user = await userService.updateUser(req.params.id, { role: req.body.role });
+            res.status(200).json({ success: true, data: toUserDTO(user) });
+        } catch (error) {
+            res.status(400).json({ success: false, message: error.message });
+        }
+    }
+
+    async searchUsers(req, res) {
+        try {
+            const users = await userService.getAllUsers();
+            const query = (req.query.q || '').toLowerCase();
+            const filtered = users.filter(u =>
+                u.name?.toLowerCase().includes(query) ||
+                u.email?.toLowerCase().includes(query)
+            );
+            res.status(200).json({ success: true, data: toUserDTOList(filtered) });
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    }
 }
 
 module.exports = new UserController();

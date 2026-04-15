@@ -21,7 +21,7 @@ const ProductDetail = () => {
     const [confirmDeleteHovered, setConfirmDeleteHovered] = useState(false);
     const [cartHovered, setCartHovered] = useState(false);
 
-    const canManageProducts = user?.role === 'admin' || user?.role === 'worker';
+    const canManageProducts = user?.role === 'admin' || user?.role === 'employee';
 
     const showToast = (msg) => {
         setToast(msg);
@@ -134,10 +134,7 @@ const ProductDetail = () => {
                         <img
                             src={product.images[0]}
                             alt={product.name}
-                            style={{
-                                ...s.productImage,
-                                ...(outOfStock ? s.productImageGrey : {}),
-                            }}
+                            style={{ ...s.productImage, ...(outOfStock ? s.productImageGrey : {}) }}
                         />
                     )}
 
@@ -154,10 +151,7 @@ const ProductDetail = () => {
                                 ...(outOfStock ? s.addCartBtnDisabled : {}),
                             }}
                             onClick={async () => {
-                                if (outOfStock) {
-                                    showToast('This item is out of stock');
-                                    return;
-                                }
+                                if (outOfStock) { showToast('This item is out of stock'); return; }
                                 try {
                                     await addToCart(id);
                                     showToast('Added to cart');

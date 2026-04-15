@@ -26,7 +26,7 @@ const ProductList = () => {
     const [hoveredView, setHoveredView] = useState(null);
     const [hoveredCart, setHoveredCart] = useState(null);
 
-    const canManageProducts = user?.role === 'admin' || user?.role === 'worker';
+    const canManageProducts = user?.role === 'admin' || user?.role === 'employee';
 
     const showToast = (msg) => {
         setToast(msg);
@@ -156,10 +156,7 @@ const ProductList = () => {
                                 <img
                                     src={product.images[0]}
                                     alt={product.name}
-                                    style={{
-                                        ...s.cardImage,
-                                        ...(outOfStock ? s.cardImageGrey : {}),
-                                    }}
+                                    style={{ ...s.cardImage, ...(outOfStock ? s.cardImageGrey : {}) }}
                                 />
                             )}
                             <div style={s.cardCategory}>{product.category}</div>
@@ -195,10 +192,7 @@ const ProductList = () => {
                                         }}
                                         onClick={async (e) => {
                                             e.preventDefault();
-                                            if (outOfStock) {
-                                                showToast('This item is out of stock');
-                                                return;
-                                            }
+                                            if (outOfStock) { showToast('This item is out of stock'); return; }
                                             try {
                                                 await addToCart(productId);
                                                 showToast('Added to cart');
