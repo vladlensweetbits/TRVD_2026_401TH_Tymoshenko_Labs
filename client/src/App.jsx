@@ -26,10 +26,10 @@ function App() {
                         <Route path="/register" element={<Register />} />
                         <Route path="/products/:id" element={<ProductDetail />} />
                         <Route path="/products/:id/edit" element={
-                            <ProtectedRoute adminOnly={true}><ProductForm /></ProtectedRoute>
+                            <ProtectedRoute workerOrAdmin={true}><ProductForm /></ProtectedRoute>
                         } />
                         <Route path="/products/new" element={
-                            <ProtectedRoute adminOnly={true}><ProductForm /></ProtectedRoute>
+                            <ProtectedRoute workerOrAdmin={true}><ProductForm /></ProtectedRoute>
                         } />
                         <Route path="/cart" element={
                             <ProtectedRoute><Cart /></ProtectedRoute>

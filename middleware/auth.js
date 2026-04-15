@@ -45,4 +45,15 @@ const employeeOrAdmin = (req, res, next) => {
     }
 };
 
-module.exports = { protect, adminOnly, employeeOrAdmin };
+const workerOrAdmin = (req, res, next) => {
+    if (req.user && (req.user.role === 'admin' || req.user.role === 'worker')) {
+        next();
+    } else {
+        res.status(403).json({
+            success: false,
+            message: 'Access denied, worker or admin only'
+        });
+    }
+};
+
+module.exports = { protect, adminOnly, employeeOrAdmin, workerOrAdmin };

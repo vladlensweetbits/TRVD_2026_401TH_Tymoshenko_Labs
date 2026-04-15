@@ -26,6 +26,8 @@ const ProductList = () => {
     const [hoveredView, setHoveredView] = useState(null);
     const [hoveredCart, setHoveredCart] = useState(null);
 
+    const canManageProducts = user?.role === 'admin' || user?.role === 'worker';
+
     const showToast = (msg) => {
         setToast(msg);
         setTimeout(() => setToast(''), 3000);
@@ -102,7 +104,7 @@ const ProductList = () => {
 
             <div style={s.header}>
                 <h1 style={s.title}>Product Catalogue</h1>
-                {user?.role === 'admin' && (
+                {canManageProducts && (
                     <button
                         onMouseEnter={() => setAddHovered(true)}
                         onMouseLeave={() => setAddHovered(false)}
@@ -208,7 +210,7 @@ const ProductList = () => {
                                         Add to Cart
                                     </button>
                                 )}
-                                {user?.role === 'admin' && (
+                                {canManageProducts && (
                                     <>
                                         <button
                                             onMouseEnter={() => setHoveredEdit(productId)}

@@ -21,6 +21,8 @@ const ProductDetail = () => {
     const [confirmDeleteHovered, setConfirmDeleteHovered] = useState(false);
     const [cartHovered, setCartHovered] = useState(false);
 
+    const canManageProducts = user?.role === 'admin' || user?.role === 'worker';
+
     const showToast = (msg) => {
         setToast(msg);
         setTimeout(() => setToast(''), 3000);
@@ -204,7 +206,7 @@ const ProductDetail = () => {
                         </div>
                     )}
 
-                    {user?.role === 'admin' && (
+                    {canManageProducts && (
                         <div style={s.adminActions}>
                             <button
                                 onMouseEnter={() => setEditHovered(true)}
