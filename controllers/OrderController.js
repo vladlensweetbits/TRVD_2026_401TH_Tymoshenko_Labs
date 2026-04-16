@@ -4,8 +4,8 @@ const { toOrderDTO, toOrderDTOList } = require('../mappers/orderMapper');
 class OrderController {
     async createOrder(req, res) {
         try {
-            const { items, address } = req.body;
-            const order = await orderService.createOrder(req.user.id, items, address);
+            const { items, address, isPaid } = req.body;
+            const order = await orderService.createOrder(req.user.id, items, address, isPaid);
             res.status(201).json({ success: true, data: toOrderDTO(order) });
         } catch (error) {
             res.status(400).json({ success: false, message: error.message });

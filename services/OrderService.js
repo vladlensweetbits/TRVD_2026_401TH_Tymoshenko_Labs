@@ -2,7 +2,7 @@ const orderRepository = require('../repositories/OrderRepository');
 const productRepository = require('../repositories/ProductRepository');
 
 class OrderService {
-    async createOrder(userId, items, address) {
+    async createOrder(userId, items, address, isPaid = false) {
         let totalPrice = 0;
 
         for (const item of items) {
@@ -22,7 +22,8 @@ class OrderService {
             user: userId,
             items,
             totalPrice,
-            address
+            address,
+            isPaid,
         });
     }
 

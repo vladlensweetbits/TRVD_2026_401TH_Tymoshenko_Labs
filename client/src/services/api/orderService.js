@@ -1,8 +1,8 @@
 import axiosInstance from './axiosInstance';
 
 const orderService = {
-    create: async (items, address) => {
-        const response = await axiosInstance.post('/orders', { items, address });
+    create: async (items, address, isPaid = false) => {
+        const response = await axiosInstance.post('/orders', { items, address, isPaid });
         return response.data;
     },
 

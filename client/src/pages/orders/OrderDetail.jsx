@@ -129,9 +129,16 @@ const OrderDetail = () => {
                             <h1 style={s.title}>Order #{orderId?.slice(-8).toUpperCase()}</h1>
                             <p style={s.date}>{date}</p>
                         </div>
-                        <span style={{ ...s.statusBadge, backgroundColor: statusStyle.bg, color: statusStyle.color, border: `1px solid ${statusStyle.border}` }}>
-                            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                        </span>
+                        <div style={s.badgeRow}>
+                            {order.isPaid ? (
+                                <span style={s.paidBadge}>✓ Paid Online</span>
+                            ) : (
+                                <span style={s.unpaidBadge}>💵 Pay on Delivery</span>
+                            )}
+                            <span style={{ ...s.statusBadge, backgroundColor: statusStyle.bg, color: statusStyle.color, border: `1px solid ${statusStyle.border}` }}>
+                                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                            </span>
+                        </div>
                     </div>
 
                     <div style={s.section}>
@@ -216,6 +223,26 @@ const OrderDetail = () => {
 
                     <div style={s.divider} />
 
+                    <div style={s.section}>
+                        <h3 style={s.sectionTitle}>Payment</h3>
+                        <div style={s.deliveryGrid}>
+                            <div style={s.deliveryItem}>
+                                <span style={s.deliveryLabel}>Payment Method</span>
+                                <span style={s.deliveryValue}>
+                                    {order.isPaid ? 'Online (Card)' : 'Cash on Delivery'}
+                                </span>
+                            </div>
+                            <div style={s.deliveryItem}>
+                                <span style={s.deliveryLabel}>Payment Status</span>
+                                <span style={{ ...s.deliveryValue, color: order.isPaid ? '#16a34a' : '#854d0e', fontWeight: '600' }}>
+                                    {order.isPaid ? 'Paid' : 'Pending Payment'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={s.divider} />
+
                     <div style={s.totalRow}>
                         <span style={s.totalLabel}>Total</span>
                         <span style={s.totalAmount}>${order.totalPrice?.toLocaleString()}</span>
@@ -248,6 +275,9 @@ const s = {
     cardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '28px' },
     title: { fontSize: '22px', fontWeight: '700', color: '#040d15', margin: '0 0 6px' },
     date: { fontSize: '13px', color: '#6b7a8d', margin: 0 },
+    badgeRow: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' },
+    paidBadge: { padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600', backgroundColor: '#dcfce7', color: '#166534', border: '1px solid #86efac', whiteSpace: 'nowrap' },
+    unpaidBadge: { padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600', backgroundColor: '#fef9c3', color: '#854d0e', border: '1px solid #fde047', whiteSpace: 'nowrap' },
     statusBadge: { padding: '6px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: '600', whiteSpace: 'nowrap' },
     section: { marginBottom: '24px' },
     sectionTitle: { fontSize: '13px', color: '#6b7a8d', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '600', marginBottom: '16px' },

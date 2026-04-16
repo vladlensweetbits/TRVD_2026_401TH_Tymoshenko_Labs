@@ -77,9 +77,14 @@ const Orders = () => {
                                     <div style={s.orderId}>Order #{orderId?.slice(-8).toUpperCase()}</div>
                                     <div style={s.orderDate}>{date}</div>
                                 </div>
-                                <span style={{ ...s.statusBadge, backgroundColor: statusStyle.bg, color: statusStyle.color, border: `1px solid ${statusStyle.border}` }}>
-                                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                                </span>
+                                <div style={s.badgeRow}>
+                                    {order.isPaid && (
+                                        <span style={s.paidBadge}>✓ Paid</span>
+                                    )}
+                                    <span style={{ ...s.statusBadge, backgroundColor: statusStyle.bg, color: statusStyle.color, border: `1px solid ${statusStyle.border}` }}>
+                                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                    </span>
+                                </div>
                             </div>
 
                             <div style={s.imageRow}>
@@ -122,6 +127,8 @@ const s = {
     cardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' },
     orderId: { fontSize: '15px', fontWeight: '700', color: '#040d15', marginBottom: '4px' },
     orderDate: { fontSize: '13px', color: '#6b7a8d' },
+    badgeRow: { display: 'flex', alignItems: 'center', gap: '8px' },
+    paidBadge: { padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600', backgroundColor: '#dcfce7', color: '#166534', border: '1px solid #86efac' },
     statusBadge: { padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600' },
     imageRow: { display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' },
     thumb: { width: '72px', height: '72px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #e0e7ef' },

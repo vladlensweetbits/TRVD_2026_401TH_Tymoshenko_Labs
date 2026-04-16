@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './store/context/AuthContext';
 import { CartProvider } from './store/context/CartContext';
 import Navbar from './components/layout/Navbar';
@@ -10,10 +10,19 @@ import ProductDetail from './pages/products/ProductDetail';
 import ProductForm from './pages/products/ProductForm';
 import Cart from './pages/cart/Cart';
 import Checkout from './pages/checkout/Checkout';
+import Payment from './pages/payment/Payment';
 import OrderSuccess from './pages/checkout/OrderSuccess';
 import Orders from './pages/orders/Orders';
 import OrderDetail from './pages/orders/OrderDetail';
 import AdminPanel from './pages/admin/AdminPanel';
+import { useAuth } from './store/context/AuthContext';
+
+const PublicRoute = ({ children }) => {
+    const { user, loading } = useAuth();
+    if (loading) return <div>Loading...</div>;
+    if (user) return <Navigate to="/" replace />;
+    return children;
+};
 
 function App() {
     return (
@@ -23,8 +32,12 @@ function App() {
                     <Navbar />
                     <Routes>
                         <Route path="/" element={<ProductList />} />
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/register" element={<Register />} />
+                        <Route path="/login" element={
+                            <PublicRoute><Login /></PublicRoute>
+                        } />
+                        <Route path="/register" element={
+                            <PublicRoute><Register /></PublicRoute>
+                        } />
                         <Route path="/products/:id" element={<ProductDetail />} />
                         <Route path="/products/:id/edit" element={
                             <ProtectedRoute employeeOrAdmin={true}><ProductForm /></ProtectedRoute>
@@ -37,6 +50,9 @@ function App() {
                         } />
                         <Route path="/checkout" element={
                             <ProtectedRoute><Checkout /></ProtectedRoute>
+                        } />
+                        <Route path="/payment" element={
+                            <ProtectedRoute><Payment /></ProtectedRoute>
                         } />
                         <Route path="/order-success" element={
                             <ProtectedRoute><OrderSuccess /></ProtectedRoute>

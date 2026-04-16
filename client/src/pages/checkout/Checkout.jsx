@@ -164,29 +164,20 @@ const Checkout = () => {
         const errs = validate();
         if (Object.keys(errs).length > 0) { setErrors(errs); return; }
 
-        setLoading(true);
-        try {
-            const items = cart.items.map(item => ({
-                product: item.product._id || item.product.id || item.product,
-                quantity: item.quantity,
-                price: item.price,
-            }));
+        const items = cart.items.map(item => ({
+            product: item.product._id || item.product.id || item.product,
+            quantity: item.quantity,
+            price: item.price,
+        }));
 
-            const address = {
-                street: `Нова Пошта, ${getWarehouseName(selectedWarehouse)}`,
-                city: getCityName(selectedCity),
-                zip: selectedWarehouse?.PostalCodeUA || '00000',
-                phone: phone.trim(),
-            };
+        const address = {
+            street: `Нова Пошта, ${getWarehouseName(selectedWarehouse)}`,
+            city: getCityName(selectedCity),
+            zip: selectedWarehouse?.PostalCodeUA || '00000',
+            phone: phone.trim(),
+        };
 
-            await orderService.create(items, address);
-            await clearCart();
-            navigate('/order-success');
-        } catch (err) {
-            setErrors({ submit: err.response?.data?.message || 'Failed to place order. Please try again.' });
-        } finally {
-            setLoading(false);
-        }
+        navigate('/payment', { state: { items, address, total } });
     };
 
     if (!cart?.items?.length) return null;
