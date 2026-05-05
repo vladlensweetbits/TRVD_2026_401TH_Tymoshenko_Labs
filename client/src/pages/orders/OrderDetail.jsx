@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import orderService from '../../services/api/orderService';
+import { useLanguage } from '../../store/context/LanguageContext';
 
 const STATUS_COLORS = {
     pending:    { bg: '#fef9c3', color: '#854d0e', border: '#fde047' },
@@ -14,6 +15,7 @@ const STATUS_COLORS = {
 const OrderDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { t } = useLanguage();
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -36,7 +38,7 @@ const OrderDetail = () => {
                 const res = await orderService.getById(id);
                 setOrder(res.data);
             } catch {
-                setError('Order not found');
+                setError(t('order_not_found'));
             } finally {
                 setLoading(false);
             }
@@ -50,9 +52,9 @@ const OrderDetail = () => {
             const res = await orderService.cancel(id);
             setOrder(res.data);
             setConfirmCancel(false);
-            showToast('Order cancelled successfully');
+            showToast(t('order_cancel_success'));
         } catch (err) {
-            showToast(err.response?.data?.message || 'Failed to cancel order');
+            showToast(err.response?.data?.message || t('order_cancel_fail'));
             setConfirmCancel(false);
         } finally {
             setCancelling(false);
@@ -65,19 +67,19 @@ const OrderDetail = () => {
 
     if (error || !order) return (
         <div style={s.page}>
-            <div style={s.errorBox}>{error || 'Order not found'}</div>
-            <button style={s.backBtn} onClick={() => navigate('/orders')}>Back to Orders</button>
+            <div style={s.errorBox}>{error || t('order_not_found')}</div>
+            <button style={s.backBtn} onClick={() => navigate('/orders')}>{t('order_back')}</button>
         </div>
     );
 
     const statusStyle = STATUS_COLORS[order.status] || STATUS_COLORS.pending;
-    const date = new Date(order.createdAt).toLocaleDateString('en-GB', {
+    const date = new Date(order.createdAt).toLocaleDateString('uk-UA', {
         day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
     });
     const orderId = order._id || order.id;
     const canCancel = order.status === 'pending';
 
-    const userName = order.user?.name || 'N/A';
+    const userName = order.user?.name || order.guestInfo?.name || 'N/A';
     const userNameParts = userName.trim().split(' ');
     const firstName = userNameParts[0] || '';
     const lastName = userNameParts.slice(1).join(' ') || '';
@@ -89,7 +91,7 @@ const OrderDetail = () => {
             {confirmCancel && (
                 <div style={s.overlay}>
                     <div style={s.modal}>
-                        <p style={s.modalText}>Are you sure you want to cancel this order?</p>
+                        <p style={s.modalText}>{t('order_cancel_confirm')}</p>
                         <div style={s.modalBtns}>
                             <button
                                 onMouseEnter={() => setDismissHovered(true)}
@@ -97,7 +99,7 @@ const OrderDetail = () => {
                                 style={{ ...s.dismissBtn, ...(dismissHovered ? s.dismissBtnHover : {}) }}
                                 onClick={() => setConfirmCancel(false)}
                             >
-                                Keep Order
+                                {t('order_no')}
                             </button>
                             <button
                                 onMouseEnter={() => setConfirmHovered(true)}
@@ -106,7 +108,7 @@ const OrderDetail = () => {
                                 onClick={handleCancel}
                                 disabled={cancelling}
                             >
-                                {cancelling ? 'Cancelling...' : 'Cancel Order'}
+                                {cancelling ? t('order_cancelling') : t('order_yes')}
                             </button>
                         </div>
                     </div>
@@ -119,7 +121,7 @@ const OrderDetail = () => {
                 style={{ ...s.backBtn, ...(backHovered ? s.backBtnHover : {}) }}
                 onClick={() => navigate('/orders')}
             >
-                Back to Orders
+                {t('order_back')}
             </button>
 
             <div style={s.wrapper}>
@@ -131,31 +133,37 @@ const OrderDetail = () => {
                         </div>
                         <div style={s.badgeRow}>
                             {order.isPaid ? (
-                                <span style={s.paidBadge}>✓ Paid Online</span>
+                                <span style={s.paidBadge}>{t('order_paid_online')}</span>
                             ) : (
-                                <span style={s.unpaidBadge}>💵 Pay on Delivery</span>
+                                <span style={s.unpaidBadge}>{t('order_pay_delivery')}</span>
                             )}
                             <span style={{ ...s.statusBadge, backgroundColor: statusStyle.bg, color: statusStyle.color, border: `1px solid ${statusStyle.border}` }}>
-                                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                {t(`status_${order.status}`)}
                             </span>
                         </div>
                     </div>
 
                     <div style={s.section}>
-                        <h3 style={s.sectionTitle}>Customer Info</h3>
+                        <h3 style={s.sectionTitle}>{t('order_customer_info')}</h3>
                         <div style={s.deliveryGrid}>
                             <div style={s.deliveryItem}>
-                                <span style={s.deliveryLabel}>First Name</span>
+                                <span style={s.deliveryLabel}>{t('order_first_name')}</span>
                                 <span style={s.deliveryValue}>{firstName}</span>
                             </div>
                             {lastName && (
                                 <div style={s.deliveryItem}>
-                                    <span style={s.deliveryLabel}>Last Name</span>
+                                    <span style={s.deliveryLabel}>{t('order_last_name')}</span>
                                     <span style={s.deliveryValue}>{lastName}</span>
                                 </div>
                             )}
+                            {order.guestInfo?.email && (
+                                <div style={s.deliveryItem}>
+                                    <span style={s.deliveryLabel}>{t('order_email')}</span>
+                                    <span style={s.deliveryValue}>{order.guestInfo.email}</span>
+                                </div>
+                            )}
                             <div style={s.deliveryItem}>
-                                <span style={s.deliveryLabel}>Phone</span>
+                                <span style={s.deliveryLabel}>{t('order_phone')}</span>
                                 <span style={s.deliveryValue}>{order.address?.phone || 'N/A'}</span>
                             </div>
                         </div>
@@ -164,7 +172,7 @@ const OrderDetail = () => {
                     <div style={s.divider} />
 
                     <div style={s.section}>
-                        <h3 style={s.sectionTitle}>Items Ordered</h3>
+                        <h3 style={s.sectionTitle}>{t('order_items')}</h3>
                         <div style={s.itemList}>
                             {order.items?.map((item, i) => {
                                 const name = item.product?.name || 'Product';
@@ -178,10 +186,10 @@ const OrderDetail = () => {
                                         )}
                                         <div style={s.itemInfo}>
                                             <div style={s.itemName}>{name}</div>
-                                            <div style={s.itemQty}>Quantity: {item.quantity}</div>
+                                            <div style={s.itemQty}>{t('order_qty')} {item.quantity}</div>
                                         </div>
                                         <div style={s.itemPrice}>
-                                            ${(item.price * item.quantity).toLocaleString()}
+                                            {(item.price * item.quantity).toLocaleString()}₴
                                         </div>
                                     </div>
                                 );
@@ -192,10 +200,10 @@ const OrderDetail = () => {
                     <div style={s.divider} />
 
                     <div style={s.section}>
-                        <h3 style={s.sectionTitle}>Delivery Details</h3>
+                        <h3 style={s.sectionTitle}>{t('order_delivery')}</h3>
                         <div style={s.deliveryGrid}>
                             <div style={s.deliveryItem}>
-                                <span style={s.deliveryLabel}>Delivery Service</span>
+                                <span style={s.deliveryLabel}>{t('order_delivery_service')}</span>
                                 <span style={s.deliveryValue}>
                                     {order.address?.street?.includes(',')
                                         ? order.address.street.split(',')[0].trim()
@@ -203,7 +211,7 @@ const OrderDetail = () => {
                                 </span>
                             </div>
                             <div style={s.deliveryItem}>
-                                <span style={s.deliveryLabel}>Warehouse</span>
+                                <span style={s.deliveryLabel}>{t('order_warehouse')}</span>
                                 <span style={s.deliveryValue}>
                                     {order.address?.street?.includes(',')
                                         ? order.address.street.split(',').slice(1).join(',').trim()
@@ -211,11 +219,11 @@ const OrderDetail = () => {
                                 </span>
                             </div>
                             <div style={s.deliveryItem}>
-                                <span style={s.deliveryLabel}>City</span>
+                                <span style={s.deliveryLabel}>{t('order_city')}</span>
                                 <span style={s.deliveryValue}>{order.address?.city}</span>
                             </div>
                             <div style={s.deliveryItem}>
-                                <span style={s.deliveryLabel}>Postal Code</span>
+                                <span style={s.deliveryLabel}>{t('order_postal_code')}</span>
                                 <span style={s.deliveryValue}>{order.address?.zip}</span>
                             </div>
                         </div>
@@ -224,18 +232,18 @@ const OrderDetail = () => {
                     <div style={s.divider} />
 
                     <div style={s.section}>
-                        <h3 style={s.sectionTitle}>Payment</h3>
+                        <h3 style={s.sectionTitle}>{t('order_payment')}</h3>
                         <div style={s.deliveryGrid}>
                             <div style={s.deliveryItem}>
-                                <span style={s.deliveryLabel}>Payment Method</span>
+                                <span style={s.deliveryLabel}>{t('order_payment_method')}</span>
                                 <span style={s.deliveryValue}>
-                                    {order.isPaid ? 'Online (Card)' : 'Cash on Delivery'}
+                                    {order.isPaid ? t('order_online_card') : t('order_cash_delivery')}
                                 </span>
                             </div>
                             <div style={s.deliveryItem}>
-                                <span style={s.deliveryLabel}>Payment Status</span>
+                                <span style={s.deliveryLabel}>{t('order_payment_status')}</span>
                                 <span style={{ ...s.deliveryValue, color: order.isPaid ? '#16a34a' : '#854d0e', fontWeight: '600' }}>
-                                    {order.isPaid ? 'Paid' : 'Pending Payment'}
+                                    {order.isPaid ? t('order_paid_status') : t('order_pending_payment')}
                                 </span>
                             </div>
                         </div>
@@ -244,8 +252,8 @@ const OrderDetail = () => {
                     <div style={s.divider} />
 
                     <div style={s.totalRow}>
-                        <span style={s.totalLabel}>Total</span>
-                        <span style={s.totalAmount}>${order.totalPrice?.toLocaleString()}</span>
+                        <span style={s.totalLabel}>{t('order_total')}</span>
+                        <span style={s.totalAmount}>{order.totalPrice?.toLocaleString()}₴</span>
                     </div>
 
                     {canCancel && (
@@ -255,7 +263,7 @@ const OrderDetail = () => {
                             style={{ ...s.cancelBtn, ...(cancelHovered ? s.cancelBtnHover : {}) }}
                             onClick={() => setConfirmCancel(true)}
                         >
-                            Cancel Order
+                            {t('order_cancel')}
                         </button>
                     )}
                 </div>

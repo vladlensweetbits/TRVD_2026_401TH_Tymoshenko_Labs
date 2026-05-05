@@ -12,6 +12,19 @@ class OrderController {
         }
     }
 
+    async createGuestOrder(req, res) {
+        try {
+            const { guestInfo, items, address, isPaid } = req.body;
+            if (!guestInfo?.name || !guestInfo?.email) {
+                return res.status(400).json({ success: false, message: 'Guest name and email are required' });
+            }
+            const order = await orderService.createGuestOrder(guestInfo, items, address, isPaid);
+            res.status(201).json({ success: true, data: toOrderDTO(order) });
+        } catch (error) {
+            res.status(400).json({ success: false, message: error.message });
+        }
+    }
+
     async getOrderById(req, res) {
         try {
             const order = await orderService.getOrderById(req.params.id);
@@ -23,7 +36,8 @@ class OrderController {
 
     async getUserOrders(req, res) {
         try {
-            const orders = await orderService.getUserOrders(req.user.id);
+            console.log('user email:', req.user.email);
+            const orders = await orderService.getUserOrders(req.user.id, req.user.email);
             res.status(200).json({ success: true, data: toOrderDTOList(orders) });
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });

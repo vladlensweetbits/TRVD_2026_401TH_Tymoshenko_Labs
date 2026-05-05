@@ -15,7 +15,7 @@ const protect = async (req, res, next) => {
             return res.status(401).json({ success: false, message: 'User not found' });
         }
 
-        req.user = { id: user._id, role: user.role };
+        req.user = { id: user._id, role: user.role, email: user.email };
         next();
     } catch (error) {
         res.status(401).json({ success: false, message: 'Not authorized, invalid token' });

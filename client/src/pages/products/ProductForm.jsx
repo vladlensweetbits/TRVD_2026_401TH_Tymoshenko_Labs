@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import productService from '../../services/api/productService';
+import { useLanguage } from '../../store/context/LanguageContext';
 
 const CATEGORIES = ['CPU', 'GPU', 'RAM', 'Storage', 'Motherboard', 'PSU', 'Case', 'Cooling'];
 
@@ -25,6 +26,7 @@ const isValidUrl = (url) => {
 const ProductForm = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { t } = useLanguage();
     const isEdit = Boolean(id);
 
     const [form, setForm] = useState(emptyForm);
@@ -55,7 +57,7 @@ const ProductForm = () => {
                     images: (p.images || []).join(', '),
                 });
             } catch {
-                showToast('Failed to load product');
+                showToast(t('form_save_fail'));
             } finally {
                 setFetchLoading(false);
             }
@@ -65,14 +67,13 @@ const ProductForm = () => {
 
     const validate = () => {
         const e = {};
-        if (!form.name.trim()) e.name = 'Name is required';
-        if (!form.description.trim()) e.description = 'Description is required';
+        if (!form.name.trim()) e.name = t('form_name') + ' is required';
+        if (!form.description.trim()) e.description = t('form_description') + ' is required';
         if (!form.price || isNaN(Number(form.price)) || Number(form.price) < 0)
-            e.price = 'Enter a valid price';
-        if (!form.category) e.category = 'Category is required';
+            e.price = t('form_price') + ' is invalid';
+        if (!form.category) e.category = t('form_category') + ' is required';
         if (form.stock === '' || isNaN(Number(form.stock)) || Number(form.stock) < 0)
-            e.stock = 'Enter a valid quantity';
-
+            e.stock = t('form_stock') + ' is invalid';
         if (!form.images.trim()) {
             e.images = 'At least one image URL is required';
         } else {
@@ -81,12 +82,9 @@ const ProductForm = () => {
                 e.images = 'At least one image URL is required';
             } else {
                 const invalidUrls = urls.filter(u => !isValidUrl(u));
-                if (invalidUrls.length > 0) {
-                    e.images = `Invalid URL`;
-                }
+                if (invalidUrls.length > 0) e.images = t('form_invalid_image');
             }
         }
-
         return e;
     };
 
@@ -113,15 +111,15 @@ const ProductForm = () => {
 
             if (isEdit) {
                 await productService.update(id, payload);
-                showToast('Product updated successfully');
+                showToast(t('form_save_success'));
                 setTimeout(() => navigate(`/products/${id}`), 1200);
             } else {
                 const res = await productService.create(payload);
-                showToast('Product added successfully');
+                showToast(t('form_save_success'));
                 setTimeout(() => navigate(`/products/${res.data.data.id}`), 1200);
             }
         } catch (err) {
-            showToast(err.response?.data?.message || 'Failed to save product');
+            showToast(err.response?.data?.message || t('form_save_fail'));
         } finally {
             setLoading(false);
         }
@@ -141,14 +139,14 @@ const ProductForm = () => {
                 style={{ ...s.backBtn, ...(backHovered ? s.backBtnHover : {}) }}
                 onClick={() => navigate(isEdit ? `/products/${id}` : '/')}
             >
-                Back
+                {t('form_back')}
             </button>
 
             <div style={s.card}>
-                <h2 style={s.title}>{isEdit ? 'Edit Product' : 'New Product'}</h2>
+                <h2 style={s.title}>{isEdit ? t('form_edit_title') : t('form_add_title')}</h2>
 
                 <form onSubmit={handleSubmit} noValidate>
-                    <Field label="Product Name" error={errors.name}>
+                    <Field label={t('form_name')} error={errors.name}>
                         <input
                             style={{ ...s.input, ...(errors.name ? s.inputErr : {}) }}
                             name="name" value={form.name} onChange={handleChange}
@@ -156,7 +154,7 @@ const ProductForm = () => {
                         />
                     </Field>
 
-                    <Field label="Category" error={errors.category}>
+                    <Field label={t('form_category')} error={errors.category}>
                         <select
                             style={{ ...s.input, ...(errors.category ? s.inputErr : {}) }}
                             name="category" value={form.category} onChange={handleChange}
@@ -167,7 +165,7 @@ const ProductForm = () => {
                     </Field>
 
                     <div style={s.row}>
-                        <Field label="Price ($)" error={errors.price} style={{ flex: 1 }}>
+                        <Field label={t('form_price')} error={errors.price} style={{ flex: 1 }}>
                             <input
                                 style={{ ...s.input, ...(errors.price ? s.inputErr : {}) }}
                                 name="price" type="number" min="0" step="0.01"
@@ -175,7 +173,7 @@ const ProductForm = () => {
                                 placeholder="0.00"
                             />
                         </Field>
-                        <Field label="Stock Quantity" error={errors.stock} style={{ flex: 1 }}>
+                        <Field label={t('form_stock')} error={errors.stock} style={{ flex: 1 }}>
                             <input
                                 style={{ ...s.input, ...(errors.stock ? s.inputErr : {}) }}
                                 name="stock" type="number" min="0"
@@ -185,7 +183,7 @@ const ProductForm = () => {
                         </Field>
                     </div>
 
-                    <Field label="Description" error={errors.description}>
+                    <Field label={t('form_description')} error={errors.description}>
                         <textarea
                             style={{ ...s.input, ...s.textarea, ...(errors.description ? s.inputErr : {}) }}
                             name="description" value={form.description} onChange={handleChange}
@@ -193,11 +191,11 @@ const ProductForm = () => {
                         />
                     </Field>
 
-                    <Field label="Images (URLs separated by comma)" error={errors.images}>
+                    <Field label={t('form_images')} error={errors.images}>
                         <input
                             style={{ ...s.input, ...(errors.images ? s.inputErr : {}) }}
                             name="images" value={form.images} onChange={handleChange}
-                            placeholder="https://..., https://..."
+                            placeholder={t('form_image_placeholder')}
                         />
                     </Field>
 
@@ -208,7 +206,7 @@ const ProductForm = () => {
                         onMouseLeave={() => setSubmitHovered(false)}
                         style={{ ...s.submitBtn, ...(submitHovered && !loading ? s.submitBtnHover : {}) }}
                     >
-                        {loading ? 'Saving...' : isEdit ? 'Save Changes' : 'Add Product'}
+                        {loading ? t('form_saving') : t('form_save')}
                     </button>
                 </form>
             </div>

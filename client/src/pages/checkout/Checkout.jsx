@@ -2,12 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../store/context/CartContext';
 import { useAuth } from '../../store/context/AuthContext';
-import orderService from '../../services/api/orderService';
+import { useLanguage } from '../../store/context/LanguageContext';
 
 const npCities = async (query) => {
     const res = await fetch('http://localhost:5000/api/novaposhta/cities', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query }),
     });
     return res.json();
@@ -15,8 +14,7 @@ const npCities = async (query) => {
 
 const npWarehouses = async (cityRef, query) => {
     const res = await fetch('http://localhost:5000/api/novaposhta/warehouses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cityRef, query }),
     });
     return res.json();
@@ -29,23 +27,24 @@ const getWarehouseNumber = (wh) => wh?.Number || '';
 const getWarehouseAddress = (wh) => wh?.ShortAddress || '';
 
 const Checkout = () => {
-    const { cart, clearCart } = useCart();
+    const { cart } = useCart();
     const { user } = useAuth();
+    const { t } = useLanguage();
     const navigate = useNavigate();
 
     const [phone, setPhone] = useState('');
+    const [guestName, setGuestName] = useState('');
+    const [guestEmail, setGuestEmail] = useState('');
     const [selectedCity, setSelectedCity] = useState(null);
     const [showCityModal, setShowCityModal] = useState(false);
     const [citySearchInput, setCitySearchInput] = useState('');
     const [citySuggestions, setCitySuggestions] = useState([]);
     const [cityLoading, setCityLoading] = useState(false);
-
     const [warehouseInput, setWarehouseInput] = useState('');
     const [selectedWarehouse, setSelectedWarehouse] = useState(null);
     const [warehouseSuggestions, setWarehouseSuggestions] = useState([]);
     const [warehouseLoading, setWarehouseLoading] = useState(false);
     const [showWarehouseSuggestions, setShowWarehouseSuggestions] = useState(false);
-
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
     const [submitHovered, setSubmitHovered] = useState(false);
@@ -58,11 +57,7 @@ const Checkout = () => {
 
     const total = cart?.items?.reduce((sum, item) => sum + item.price * item.quantity, 0) || 0;
 
-    useEffect(() => {
-        if (!cart?.items?.length) {
-            navigate('/cart');
-        }
-    }, [cart]);
+    useEffect(() => { if (!cart?.items?.length) navigate('/cart'); }, [cart]);
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -93,13 +88,8 @@ const Checkout = () => {
             setCityLoading(true);
             try {
                 const data = await npCities(val);
-                const list = data?.data || [];
-                setCitySuggestions(list);
-            } catch {
-                setCitySuggestions([]);
-            } finally {
-                setCityLoading(false);
-            }
+                setCitySuggestions(data?.data || []);
+            } catch { setCitySuggestions([]); } finally { setCityLoading(false); }
         }, 350);
     };
 
@@ -119,18 +109,9 @@ const Checkout = () => {
         try {
             const data = await npWarehouses(cityRef, query || '');
             const list = data?.data || [];
-            if (list.length > 0) {
-                setWarehouseSuggestions(list);
-                setShowWarehouseSuggestions(true);
-            } else {
-                setWarehouseSuggestions([]);
-                setShowWarehouseSuggestions(false);
-            }
-        } catch {
-            setWarehouseSuggestions([]);
-        } finally {
-            setWarehouseLoading(false);
-        }
+            if (list.length > 0) { setWarehouseSuggestions(list); setShowWarehouseSuggestions(true); }
+            else { setWarehouseSuggestions([]); setShowWarehouseSuggestions(false); }
+        } catch { setWarehouseSuggestions([]); } finally { setWarehouseLoading(false); }
     };
 
     const handleWarehouseInput = (e) => {
@@ -152,10 +133,15 @@ const Checkout = () => {
 
     const validate = () => {
         const e = {};
-        if (!phone.trim()) e.phone = 'Phone number is required';
-        else if (!/^\+?[\d\s\-()]{10,15}$/.test(phone.trim())) e.phone = 'Enter a valid phone number';
-        if (!selectedCity) e.city = 'Please select a city';
-        if (!selectedWarehouse) e.warehouse = 'Please select a Nova Poshta warehouse';
+        if (!user) {
+            if (!guestName.trim()) e.guestName = t('checkout_err_name');
+            if (!guestEmail.trim()) e.guestEmail = t('checkout_err_email');
+            else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail.trim())) e.guestEmail = t('checkout_err_email_invalid');
+        }
+        if (!phone.trim()) e.phone = t('checkout_err_phone');
+        else if (!/^\+?[\d\s\-()]{10,15}$/.test(phone.trim())) e.phone = t('checkout_err_phone_invalid');
+        if (!selectedCity) e.city = t('checkout_err_city');
+        if (!selectedWarehouse) e.warehouse = t('checkout_err_warehouse');
         return e;
     };
 
@@ -177,7 +163,8 @@ const Checkout = () => {
             phone: phone.trim(),
         };
 
-        navigate('/payment', { state: { items, address, total } });
+        const guestInfo = !user ? { name: guestName.trim(), email: guestEmail.trim() } : null;
+        navigate('/payment', { state: { items, address, total, guestInfo } });
     };
 
     if (!cart?.items?.length) return null;
@@ -188,41 +175,27 @@ const Checkout = () => {
                 <div style={s.modalOverlay} onMouseDown={() => setShowCityModal(false)}>
                     <div style={s.cityModal} onMouseDown={e => e.stopPropagation()}>
                         <div style={s.modalHeader}>
-                            <h2 style={s.modalTitle}>Select your city</h2>
+                            <h2 style={s.modalTitle}>{t('checkout_select_city')}</h2>
                             <button style={s.modalClose} onClick={() => setShowCityModal(false)}>✕</button>
                         </div>
-
-                        <label style={s.modalSearchLabel}>Enter city or village name</label>
+                        <label style={s.modalSearchLabel}>{t('checkout_city_label')}</label>
                         <div style={{ position: 'relative' }}>
-                            <input
-                                ref={citySearchRef}
-                                value={citySearchInput}
-                                onChange={handleCitySearchInput}
-                                placeholder="e.g. Полтава, Київ, Котюжини..."
-                                style={s.modalSearchInput}
-                                autoComplete="off"
-                            />
-                            {cityLoading && <div style={s.modalLoader}>Searching...</div>}
+                            <input ref={citySearchRef} value={citySearchInput} onChange={handleCitySearchInput}
+                                   placeholder={t('checkout_city_search_placeholder')} style={s.modalSearchInput} autoComplete="off" />
+                            {cityLoading && <div style={s.modalLoader}>{t('checkout_searching')}</div>}
                         </div>
-
                         {!cityLoading && citySearchInput.length >= 2 && citySuggestions.length === 0 && (
-                            <div style={s.noResults}>No cities found. Try a different name.</div>
+                            <div style={s.noResults}>{t('checkout_no_cities')}</div>
                         )}
-
                         {citySuggestions.length > 0 && (
                             <div style={s.modalSuggestions}>
                                 {citySuggestions.map((city) => (
-                                    <div
-                                        key={city.Ref}
-                                        style={s.modalSuggestionItem}
-                                        onClick={() => handleCitySelect(city)}
-                                        onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f0f7ff'}
-                                        onMouseLeave={e => e.currentTarget.style.backgroundColor = '#ffffff'}
-                                    >
+                                    <div key={city.Ref} style={s.modalSuggestionItem}
+                                         onClick={() => handleCitySelect(city)}
+                                         onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f0f7ff'}
+                                         onMouseLeave={e => e.currentTarget.style.backgroundColor = '#ffffff'}>
                                         <div style={s.modalCityName}>{getCityName(city)}</div>
-                                        {getCityRegion(city) && (
-                                            <div style={s.modalCityRegion}>{getCityRegion(city)} region</div>
-                                        )}
+                                        {getCityRegion(city) && <div style={s.modalCityRegion}>{getCityRegion(city)} {t('checkout_region')}</div>}
                                     </div>
                                 ))}
                             </div>
@@ -237,135 +210,115 @@ const Checkout = () => {
                 style={{ ...s.backBtn, ...(backHovered ? s.backBtnHover : {}) }}
                 onClick={() => navigate('/cart')}
             >
-                Back to Cart
+                {t('checkout_back')}
             </button>
 
             <div style={s.layout}>
                 <div style={s.formSection}>
                     <div style={s.card}>
-                        <h2 style={s.cardTitle}>Delivery Details</h2>
-                        <div style={s.deliveryBadge}>Nova Poshta</div>
-
+                        <h2 style={s.cardTitle}>{t('checkout_delivery')}</h2>
+                        <div style={s.deliveryBadge}>{t('checkout_nova_poshta')}</div>
                         {errors.submit && <div style={s.errorBox}>{errors.submit}</div>}
 
                         <form onSubmit={handleSubmit} noValidate>
-                            <Field label="Phone Number" error={errors.phone}>
-                                <input
-                                    value={phone}
-                                    onChange={e => { setPhone(e.target.value); setErrors({ ...errors, phone: '' }); }}
-                                    placeholder="+380 XX XXX XX XX"
-                                    style={{ ...s.input, ...(errors.phone ? s.inputErr : {}) }}
-                                />
+                            {!user && (
+                                <>
+                                    <div style={s.guestBanner}>
+                                        {t('checkout_guest_banner')}
+                                        <span style={s.guestLoginLink} onClick={() => navigate('/login')}>{t('checkout_guest_sign_in')}</span>
+                                        {t('checkout_guest_tracking')}
+                                    </div>
+                                    <Field label={t('checkout_full_name')} error={errors.guestName}>
+                                        <input value={guestName}
+                                               onChange={e => { setGuestName(e.target.value); setErrors({ ...errors, guestName: '' }); }}
+                                               placeholder={t('checkout_full_name_placeholder')}
+                                               style={{ ...s.input, ...(errors.guestName ? s.inputErr : {}) }} />
+                                    </Field>
+                                    <Field label={t('checkout_email')} error={errors.guestEmail}>
+                                        <input value={guestEmail} type="email"
+                                               onChange={e => { setGuestEmail(e.target.value); setErrors({ ...errors, guestEmail: '' }); }}
+                                               placeholder={t('checkout_email_placeholder')}
+                                               style={{ ...s.input, ...(errors.guestEmail ? s.inputErr : {}) }} />
+                                    </Field>
+                                </>
+                            )}
+
+                            <Field label={t('checkout_phone')} error={errors.phone}>
+                                <input value={phone}
+                                       onChange={e => { setPhone(e.target.value); setErrors({ ...errors, phone: '' }); }}
+                                       placeholder={t('checkout_phone_placeholder')}
+                                       style={{ ...s.input, ...(errors.phone ? s.inputErr : {}) }} />
                             </Field>
 
-                            <Field label="City or Village" error={errors.city}>
+                            <Field label={t('checkout_city')} error={errors.city}>
                                 {selectedCity ? (
                                     <div style={s.selectedCard}>
                                         <div style={s.selectedInfo}>
-                                            <span style={s.selectedPin}>📍</span>
                                             <div>
                                                 <div style={s.selectedName}>{getCityName(selectedCity)}</div>
-                                                {getCityRegion(selectedCity) && (
-                                                    <div style={s.selectedSub}>{getCityRegion(selectedCity)} region</div>
-                                                )}
+                                                {getCityRegion(selectedCity) && <div style={s.selectedSub}>{getCityRegion(selectedCity)} {t('checkout_region')}</div>}
                                             </div>
                                         </div>
-                                        <button
-                                            type="button"
-                                            style={s.changeBtn}
-                                            onClick={() => {
-                                                setSelectedCity(null);
-                                                setSelectedWarehouse(null);
-                                                setWarehouseInput('');
-                                                setShowCityModal(true);
-                                            }}
-                                        >
-                                            Change
+                                        <button type="button" style={s.changeBtn}
+                                                onClick={() => { setSelectedCity(null); setSelectedWarehouse(null); setWarehouseInput(''); setShowCityModal(true); }}>
+                                            {t('checkout_change')}
                                         </button>
                                     </div>
                                 ) : (
-                                    <div
-                                        style={{ ...s.cityPickerTrigger, ...(errors.city ? s.inputErr : {}) }}
-                                        onClick={() => setShowCityModal(true)}
-                                    >
-                                        <span style={s.cityPickerText}>Select city or village...</span>
+                                    <div style={{ ...s.cityPickerTrigger, ...(errors.city ? s.inputErr : {}) }} onClick={() => setShowCityModal(true)}>
+                                        <span style={s.cityPickerText}>{t('checkout_city_placeholder')}</span>
                                     </div>
                                 )}
                             </Field>
 
                             {selectedCity && (
-                                <Field label="Nova Poshta Warehouse" error={errors.warehouse}>
+                                <Field label={t('checkout_warehouse')} error={errors.warehouse}>
                                     {selectedWarehouse ? (
                                         <div style={s.selectedCard}>
                                             <div style={s.selectedInfo}>
-                                                <span style={s.selectedPin}>🏢</span>
                                                 <div>
-                                                    {getWarehouseNumber(selectedWarehouse) && (
-                                                        <div style={s.selectedName}>№{getWarehouseNumber(selectedWarehouse)}</div>
-                                                    )}
+                                                    {getWarehouseNumber(selectedWarehouse) && <div style={s.selectedName}>№{getWarehouseNumber(selectedWarehouse)}</div>}
                                                     <div style={s.selectedSub}>{getWarehouseAddress(selectedWarehouse)}</div>
                                                 </div>
                                             </div>
-                                            <button
-                                                type="button"
-                                                style={s.changeBtn}
-                                                onClick={() => {
-                                                    setSelectedWarehouse(null);
-                                                    setWarehouseInput('');
-                                                    loadWarehouses(selectedCity?.Ref, '');
-                                                }}
-                                            >
-                                                Change
+                                            <button type="button" style={s.changeBtn}
+                                                    onClick={() => { setSelectedWarehouse(null); setWarehouseInput(''); loadWarehouses(selectedCity?.Ref, ''); }}>
+                                                {t('checkout_change')}
                                             </button>
                                         </div>
                                     ) : (
                                         <div style={{ position: 'relative' }} ref={warehouseRef}>
-                                            <input
-                                                value={warehouseInput}
-                                                onChange={handleWarehouseInput}
-                                                onFocus={() => {
-                                                    if (warehouseSuggestions.length === 0) loadWarehouses(selectedCity?.Ref, '');
-                                                    else setShowWarehouseSuggestions(true);
-                                                }}
-                                                placeholder="Search by number or address..."
-                                                style={{ ...s.input, ...(errors.warehouse ? s.inputErr : {}) }}
-                                                autoComplete="off"
-                                            />
-                                            {warehouseLoading && <div style={s.loader}>Searching...</div>}
+                                            <input value={warehouseInput} onChange={handleWarehouseInput}
+                                                   onFocus={() => { if (warehouseSuggestions.length === 0) loadWarehouses(selectedCity?.Ref, ''); else setShowWarehouseSuggestions(true); }}
+                                                   placeholder={t('checkout_warehouse_placeholder')}
+                                                   style={{ ...s.input, ...(errors.warehouse ? s.inputErr : {}) }} autoComplete="off" />
+                                            {warehouseLoading && <div style={s.loader}>{t('checkout_searching')}</div>}
                                             {showWarehouseSuggestions && warehouseSuggestions.length > 0 && (
                                                 <div style={s.suggestions}>
                                                     {warehouseSuggestions.map((wh) => (
-                                                        <div
-                                                            key={wh.Ref}
-                                                            style={s.warehouseItem}
-                                                            onMouseDown={() => handleWarehouseSelect(wh)}
-                                                            onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f0f7ff'}
-                                                            onMouseLeave={e => e.currentTarget.style.backgroundColor = '#ffffff'}
-                                                        >
-                                                            {getWarehouseNumber(wh) && (
-                                                                <span style={s.warehouseNumber}>№{getWarehouseNumber(wh)}</span>
-                                                            )}
+                                                        <div key={wh.Ref} style={s.warehouseItem}
+                                                             onMouseDown={() => handleWarehouseSelect(wh)}
+                                                             onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f0f7ff'}
+                                                             onMouseLeave={e => e.currentTarget.style.backgroundColor = '#ffffff'}>
+                                                            {getWarehouseNumber(wh) && <span style={s.warehouseNumber}>№{getWarehouseNumber(wh)}</span>}
                                                             <span style={s.warehouseAddress}>{getWarehouseAddress(wh)}</span>
                                                         </div>
                                                     ))}
                                                 </div>
                                             )}
                                             {!warehouseLoading && warehouseSuggestions.length === 0 && (
-                                                <div style={s.noWarehouses}>No warehouses found in this city</div>
+                                                <div style={s.noWarehouses}>{t('checkout_no_warehouses')}</div>
                                             )}
                                         </div>
                                     )}
                                 </Field>
                             )}
 
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                onMouseEnter={() => setSubmitHovered(true)}
-                                onMouseLeave={() => setSubmitHovered(false)}
-                                style={{ ...s.submitBtn, ...(submitHovered && !loading ? s.submitBtnHover : {}) }}
-                            >
-                                {loading ? 'Placing Order...' : 'Place Order'}
+                            <button type="submit" disabled={loading}
+                                    onMouseEnter={() => setSubmitHovered(true)}
+                                    onMouseLeave={() => setSubmitHovered(false)}
+                                    style={{ ...s.submitBtn, ...(submitHovered && !loading ? s.submitBtnHover : {}) }}>
+                                {loading ? t('checkout_placing') : t('checkout_place_order')}
                             </button>
                         </form>
                     </div>
@@ -373,7 +326,7 @@ const Checkout = () => {
 
                 <div style={s.summarySection}>
                     <div style={s.card}>
-                        <h2 style={s.cardTitle}>Order Summary</h2>
+                        <h2 style={s.cardTitle}>{t('checkout_summary')}</h2>
                         <div style={s.itemList}>
                             {cart.items.map((item) => {
                                 const productId = item.product?._id || item.product?.id || item.product;
@@ -381,28 +334,22 @@ const Checkout = () => {
                                 const productImage = item.product?.images?.[0] || null;
                                 return (
                                     <div key={productId} style={s.summaryItem}>
-                                        {productImage && (
-                                            <img src={productImage} alt={productName} style={s.itemImage} />
-                                        )}
+                                        {productImage && <img src={productImage} alt={productName} style={s.itemImage} />}
                                         <div style={s.itemInfo}>
                                             <div style={s.itemName}>{productName}</div>
-                                            <div style={s.itemQty}>Quantity: {item.quantity}</div>
+                                            <div style={s.itemQty}>{t('checkout_quantity')} {item.quantity}</div>
                                         </div>
-                                        <div style={s.itemPrice}>
-                                            ${(item.price * item.quantity).toLocaleString()}
-                                        </div>
+                                        <div style={s.itemPrice}>{(item.price * item.quantity).toLocaleString()}₴</div>
                                     </div>
                                 );
                             })}
                         </div>
                         <div style={s.divider} />
                         <div style={s.totalRow}>
-                            <span style={s.totalLabel}>Total</span>
-                            <span style={s.totalAmount}>${total.toLocaleString()}</span>
+                            <span style={s.totalLabel}>{t('checkout_total')}</span>
+                            <span style={s.totalAmount}>{total.toLocaleString()}₴</span>
                         </div>
-                        <div style={s.deliveryNote}>
-                            Delivery across Ukraine via "Nova Poshta"
-                        </div>
+                        <div style={s.deliveryNote}>{t('checkout_delivery_note')}</div>
                     </div>
                 </div>
             </div>
@@ -412,9 +359,7 @@ const Checkout = () => {
 
 const Field = ({ label, error, children }) => (
     <div style={{ marginBottom: '18px' }}>
-        <label style={{ display: 'block', color: '#040d15', fontSize: '13px', fontWeight: '500', marginBottom: '6px' }}>
-            {label}
-        </label>
+        <label style={{ display: 'block', color: '#040d15', fontSize: '13px', fontWeight: '500', marginBottom: '6px' }}>{label}</label>
         {children}
         {error && <span style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'block' }}>{error}</span>}
     </div>
@@ -430,15 +375,15 @@ const s = {
     card: { backgroundColor: '#ffffff', border: '1px solid #e0e7ef', borderRadius: '16px', padding: '32px', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' },
     cardTitle: { fontSize: '20px', fontWeight: '700', color: '#040d15', margin: '0 0 16px' },
     deliveryBadge: { display: 'inline-block', backgroundColor: '#fff3cd', border: '1px solid #ffc107', color: '#856404', padding: '4px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: '600', marginBottom: '20px' },
+    guestBanner: { backgroundColor: '#f0f7ff', border: '1px solid #bdd7ee', borderRadius: '8px', padding: '10px 14px', fontSize: '13px', color: '#1f73b7', marginBottom: '20px' },
+    guestLoginLink: { fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' },
     errorBox: { backgroundColor: '#fef2f2', border: '1px solid #fca5a5', color: '#dc2626', padding: '10px 14px', borderRadius: '8px', marginBottom: '20px', fontSize: '14px' },
     input: { width: '100%', padding: '10px 14px', backgroundColor: '#f8fafc', border: '1px solid #d1dce8', borderRadius: '8px', color: '#040d15', fontSize: '14px', outline: 'none', boxSizing: 'border-box' },
     inputErr: { border: '1px solid #dc2626' },
     cityPickerTrigger: { display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', backgroundColor: '#f8fafc', border: '1px solid #d1dce8', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', color: '#6b7a8d' },
-    cityPickerPin: { fontSize: '16px' },
     cityPickerText: { flex: 1 },
     selectedCard: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', backgroundColor: '#f0f7ff', border: '1px solid #bdd7ee', borderRadius: '8px' },
     selectedInfo: { display: 'flex', alignItems: 'center', gap: '10px' },
-    selectedPin: { fontSize: '18px' },
     selectedName: { fontSize: '14px', fontWeight: '600', color: '#040d15' },
     selectedSub: { fontSize: '12px', color: '#6b7a8d', marginTop: '2px' },
     changeBtn: { background: 'none', border: 'none', color: '#1f73b7', fontSize: '13px', fontWeight: '600', cursor: 'pointer', padding: '4px 8px' },

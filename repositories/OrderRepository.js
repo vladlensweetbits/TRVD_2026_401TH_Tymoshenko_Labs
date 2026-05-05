@@ -12,10 +12,21 @@ class OrderRepository {
             .populate('items.product', 'name price images');
     }
 
-    async findByUser(userId) {
-        return await Order.find({ user: userId })
+    async findByUser(userId, userEmail) {
+        console.log('findByUser called with:', { userId, userEmail });
+
+        const query = userEmail
+            ? { $or: [{ user: userId }, { 'guestInfo.email': userEmail }] }
+            : { user: userId };
+
+        console.log('query:', JSON.stringify(query));
+
+        const results = await Order.find(query)
             .populate('items.product', 'name price images')
             .sort({ createdAt: -1 });
+
+        console.log('results count:', results.length);
+        return results;
     }
 
     async findAll() {

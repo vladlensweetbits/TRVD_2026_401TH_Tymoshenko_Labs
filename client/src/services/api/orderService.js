@@ -6,6 +6,11 @@ const orderService = {
         return response.data;
     },
 
+    createGuest: async (guestInfo, items, address, isPaid = false) => {
+        const response = await axiosInstance.post('/orders/guest', { guestInfo, items, address, isPaid });
+        return response.data;
+    },
+
     getMyOrders: async () => {
         const response = await axiosInstance.get('/orders/my');
         return response.data;

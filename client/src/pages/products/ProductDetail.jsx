@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../store/context/AuthContext.jsx';
 import { useCart } from '../../store/context/CartContext.jsx';
+import { useLanguage } from '../../store/context/LanguageContext.jsx';
 import productService from '../../services/api/productService';
 
 const ProductDetail = () => {
@@ -9,6 +10,7 @@ const ProductDetail = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const { addToCart } = useCart();
+    const { t } = useLanguage();
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -20,6 +22,9 @@ const ProductDetail = () => {
     const [cancelHovered, setCancelHovered] = useState(false);
     const [confirmDeleteHovered, setConfirmDeleteHovered] = useState(false);
     const [cartHovered, setCartHovered] = useState(false);
+    const [activeImg, setActiveImg] = useState(0);
+    const [lightbox, setLightbox] = useState(false);
+    const [lightboxImg, setLightboxImg] = useState(0);
 
     const canManageProducts = user?.role === 'admin' || user?.role === 'employee';
 
@@ -31,7 +36,7 @@ const ProductDetail = () => {
     useEffect(() => {
         const fetch = async () => {
             if (!id || id === 'undefined') {
-                setError('Invalid product ID');
+                setError(t('detail_invalid_id'));
                 setLoading(false);
                 return;
             }
@@ -39,7 +44,7 @@ const ProductDetail = () => {
                 const res = await productService.getById(id);
                 setProduct(res.data);
             } catch {
-                setError('Product not found');
+                setError(t('detail_not_found'));
             } finally {
                 setLoading(false);
             }
@@ -47,47 +52,83 @@ const ProductDetail = () => {
         fetch();
     }, [id]);
 
+    useEffect(() => {
+        const handleKey = (e) => {
+            if (!lightbox || !product?.images?.length) return;
+            if (e.key === 'ArrowRight') setLightboxImg(i => (i + 1) % product.images.length);
+            if (e.key === 'ArrowLeft') setLightboxImg(i => (i - 1 + product.images.length) % product.images.length);
+            if (e.key === 'Escape') setLightbox(false);
+        };
+        window.addEventListener('keydown', handleKey);
+        return () => window.removeEventListener('keydown', handleKey);
+    }, [lightbox, product]);
+
     const handleDelete = async () => {
         try {
             await productService.delete(id);
-            showToast('Product deleted successfully');
+            showToast(t('detail_delete_success'));
             setTimeout(() => navigate('/'), 1500);
         } catch {
-            showToast('Failed to delete product');
+            showToast(t('detail_delete_fail'));
             setConfirmDelete(false);
         }
     };
 
     if (loading) return (
-        <div style={s.page}>
-            <div style={s.center}><div style={s.spinner} /></div>
-        </div>
+        <div style={s.page}><div style={s.center}><div style={s.spinner} /></div></div>
     );
 
     if (error || !product) return (
         <div style={s.page}>
-            <div style={s.errorBox}>{error || 'Failed to load product'}</div>
+            <div style={s.errorBox}>{error || t('detail_load_fail')}</div>
             <button
                 onMouseEnter={() => setBackHovered(true)}
                 onMouseLeave={() => setBackHovered(false)}
                 style={{ ...s.backBtn, ...(backHovered ? s.backBtnHover : {}) }}
                 onClick={() => navigate('/')}
             >
-                Back to Catalogue
+                {t('detail_back')}
             </button>
         </div>
     );
 
     const outOfStock = product.stock === 0;
+    const images = product.images || [];
 
     return (
         <div style={s.page}>
             {toast && <div style={s.toast}>{toast}</div>}
 
+            {lightbox && images.length > 0 && (
+                <div style={s.lightboxOverlay} onClick={() => setLightbox(false)}>
+                    <div style={s.lightboxContent} onClick={e => e.stopPropagation()}>
+                        <button style={s.lightboxClose} onClick={() => setLightbox(false)}>✕</button>
+                        {images.length > 1 && (
+                            <button style={{ ...s.lightboxArrow, left: '12px' }}
+                                    onClick={() => setLightboxImg(i => (i - 1 + images.length) % images.length)}>‹</button>
+                        )}
+                        <img src={images[lightboxImg]} alt={product.name} style={s.lightboxImg} />
+                        {images.length > 1 && (
+                            <button style={{ ...s.lightboxArrow, right: '12px' }}
+                                    onClick={() => setLightboxImg(i => (i + 1) % images.length)}>›</button>
+                        )}
+                        {images.length > 1 && (
+                            <div style={s.lightboxDots}>
+                                {images.map((_, i) => (
+                                    <div key={i}
+                                         style={{ ...s.lightboxDot, ...(i === lightboxImg ? s.lightboxDotActive : {}) }}
+                                         onClick={() => setLightboxImg(i)} />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {confirmDelete && (
                 <div style={s.overlay}>
                     <div style={s.modal}>
-                        <p style={s.modalText}>Are you sure you want to delete this product?</p>
+                        <p style={s.modalText}>{t('detail_delete_confirm')}</p>
                         <div style={s.modalBtns}>
                             <button
                                 onMouseEnter={() => setCancelHovered(true)}
@@ -95,7 +136,7 @@ const ProductDetail = () => {
                                 style={{ ...s.cancelBtn, ...(cancelHovered ? s.cancelBtnHover : {}) }}
                                 onClick={() => setConfirmDelete(false)}
                             >
-                                Cancel
+                                {t('detail_cancel')}
                             </button>
                             <button
                                 onMouseEnter={() => setConfirmDeleteHovered(true)}
@@ -103,7 +144,7 @@ const ProductDetail = () => {
                                 style={{ ...s.deleteBtn, ...(confirmDeleteHovered ? s.deleteBtnHover : {}) }}
                                 onClick={handleDelete}
                             >
-                                Delete
+                                {t('catalogue_delete')}
                             </button>
                         </div>
                     </div>
@@ -116,7 +157,7 @@ const ProductDetail = () => {
                 style={{ ...s.backBtn, ...(backHovered ? s.backBtnHover : {}) }}
                 onClick={() => navigate('/')}
             >
-                Back to Catalogue
+                {t('detail_back')}
             </button>
 
             <div style={s.wrapper}>
@@ -124,69 +165,79 @@ const ProductDetail = () => {
                     <div style={s.topRow}>
                         <span style={s.category}>{product.category}</span>
                         <span style={outOfStock ? s.outStock : s.inStock}>
-                            {outOfStock ? 'Out of stock' : `In stock: ${product.stock} pcs.`}
+                            {outOfStock ? t('catalogue_out_stock') : `${t('catalogue_in_stock')}: ${product.stock} ${t('detail_pcs')}`}
                         </span>
                     </div>
 
                     <h1 style={s.name}>{product.name}</h1>
 
-                    {product.images && product.images.length > 0 && (
-                        <img
-                            src={product.images[0]}
-                            alt={product.name}
-                            style={{ ...s.productImage, ...(outOfStock ? s.productImageGrey : {}) }}
-                        />
+                    {images.length > 0 && (
+                        <div style={s.galleryWrap}>
+                            <div style={s.mainImgWrap}>
+                                {images.length > 1 && (
+                                    <button style={{ ...s.arrow, left: '10px' }}
+                                            onClick={() => setActiveImg(i => (i - 1 + images.length) % images.length)}>‹</button>
+                                )}
+                                <img
+                                    src={images[activeImg]}
+                                    alt={product.name}
+                                    style={{ ...s.productImage, ...(outOfStock ? s.productImageGrey : {}), cursor: 'zoom-in' }}
+                                    onClick={() => { setLightboxImg(activeImg); setLightbox(true); }}
+                                />
+                                {images.length > 1 && (
+                                    <button style={{ ...s.arrow, right: '10px' }}
+                                            onClick={() => setActiveImg(i => (i + 1) % images.length)}>›</button>
+                                )}
+                            </div>
+                            {images.length > 1 && (
+                                <div style={s.thumbRow}>
+                                    {images.map((img, i) => (
+                                        <img key={i} src={img} alt=""
+                                             style={{ ...s.thumb, ...(i === activeImg ? s.thumbActive : {}), ...(outOfStock ? s.thumbGrey : {}) }}
+                                             onClick={() => setActiveImg(i)} />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     )}
 
-                    <p style={s.price}>${product.price?.toLocaleString()}</p>
+                    <p style={s.price}>{product.price?.toLocaleString()}₴</p>
 
-                    {user && (
-                        <button
-                            onMouseEnter={() => setCartHovered(true)}
-                            onMouseLeave={() => setCartHovered(false)}
-                            disabled={outOfStock}
-                            style={{
-                                ...s.addCartBtn,
-                                ...(cartHovered && !outOfStock ? s.addCartBtnHover : {}),
-                                ...(outOfStock ? s.addCartBtnDisabled : {}),
-                            }}
-                            onClick={async () => {
-                                if (outOfStock) { showToast('This item is out of stock'); return; }
-                                try {
-                                    await addToCart(id);
-                                    showToast('Added to cart');
-                                } catch {
-                                    showToast('This item is out of stock');
-                                }
-                            }}
-                        >
-                            {outOfStock ? 'Out of Stock' : 'Add to Cart'}
-                        </button>
-                    )}
+                    <button
+                        onMouseEnter={() => setCartHovered(true)}
+                        onMouseLeave={() => setCartHovered(false)}
+                        disabled={outOfStock}
+                        style={{ ...s.addCartBtn, ...(cartHovered && !outOfStock ? s.addCartBtnHover : {}), ...(outOfStock ? s.addCartBtnDisabled : {}) }}
+                        onClick={async () => {
+                            if (outOfStock) { showToast(t('detail_stock_toast')); return; }
+                            try {
+                                await addToCart(id, 1, product);
+                                showToast(t('detail_added_toast'));
+                            } catch {
+                                showToast(t('detail_stock_toast'));
+                            }
+                        }}
+                    >
+                        {outOfStock ? t('detail_out_stock') : t('detail_add_cart')}
+                    </button>
 
                     <div style={s.section}>
-                        <h3 style={s.sectionTitle}>Description</h3>
+                        <h3 style={s.sectionTitle}>{t('detail_description')}</h3>
                         <p style={s.desc}>{product.description}</p>
                     </div>
 
                     {product.specs && (
                         <div style={s.section}>
-                            <h3 style={s.sectionTitle}>Specifications</h3>
+                            <h3 style={s.sectionTitle}>{t('detail_specs')}</h3>
                             <table style={s.table}>
                                 <tbody>
                                 {product.specs instanceof Map || Array.isArray(product.specs) ? (
                                     Array.from(product.specs).map(([key, val]) => (
-                                        <tr key={key}>
-                                            <td style={s.tdKey}>{key}</td>
-                                            <td style={s.tdVal}>{val}</td>
-                                        </tr>
+                                        <tr key={key}><td style={s.tdKey}>{key}</td><td style={s.tdVal}>{val}</td></tr>
                                     ))
                                 ) : (
                                     Object.entries(product.specs).map(([key, val]) => (
-                                        <tr key={key}>
-                                            <td style={s.tdKey}>{key}</td>
-                                            <td style={s.tdVal}>{val}</td>
-                                        </tr>
+                                        <tr key={key}><td style={s.tdKey}>{key}</td><td style={s.tdVal}>{val}</td></tr>
                                     ))
                                 )}
                                 </tbody>
@@ -196,7 +247,7 @@ const ProductDetail = () => {
 
                     {product.rating > 0 && (
                         <div style={s.section}>
-                            <span style={s.rating}>Rating: {product.rating.toFixed(1)} / 5</span>
+                            <span style={s.rating}>{t('detail_rating')}: {product.rating.toFixed(1)} / 5</span>
                         </div>
                     )}
 
@@ -208,7 +259,7 @@ const ProductDetail = () => {
                                 style={{ ...s.editBtn, ...(editHovered ? s.editBtnHover : {}) }}
                                 onClick={() => navigate(`/products/${id}/edit`)}
                             >
-                                Edit Product
+                                {t('detail_edit')}
                             </button>
                             <button
                                 onMouseEnter={() => setDeleteHovered(true)}
@@ -216,7 +267,7 @@ const ProductDetail = () => {
                                 style={{ ...s.deleteBtn, ...(deleteHovered ? s.deleteBtnHover : {}) }}
                                 onClick={() => setConfirmDelete(true)}
                             >
-                                Delete Product
+                                {t('detail_delete')}
                             </button>
                         </div>
                     )}
@@ -239,8 +290,23 @@ const s = {
     inStock: { fontSize: '13px', color: '#16a34a' },
     outStock: { fontSize: '13px', color: '#dc2626' },
     name: { fontSize: '28px', fontWeight: '700', margin: '0 0 16px', color: '#040d15' },
-    productImage: { width: '100%', height: '360px', objectFit: 'cover', borderRadius: '12px', marginBottom: '24px', transition: 'filter 0.2s ease' },
+    galleryWrap: { marginBottom: '24px' },
+    mainImgWrap: { position: 'relative', display: 'flex', alignItems: 'center' },
+    productImage: { width: '100%', height: '360px', objectFit: 'cover', borderRadius: '12px', transition: 'filter 0.2s ease', display: 'block' },
     productImageGrey: { filter: 'grayscale(100%)', opacity: 0.6 },
+    arrow: { position: 'absolute', top: '50%', transform: 'translateY(-50%)', backgroundColor: 'rgba(0,0,0,0.45)', color: '#fff', border: 'none', borderRadius: '50%', width: '36px', height: '36px', fontSize: '22px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2, lineHeight: 1 },
+    thumbRow: { display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' },
+    thumb: { width: '72px', height: '72px', objectFit: 'cover', borderRadius: '8px', cursor: 'pointer', border: '2px solid transparent', transition: 'border-color 0.15s ease' },
+    thumbActive: { border: '2px solid #1f73b7' },
+    thumbGrey: { filter: 'grayscale(100%)', opacity: 0.6 },
+    lightboxOverlay: { position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 },
+    lightboxContent: { position: 'relative', maxWidth: '90vw', maxHeight: '90vh', display: 'flex', flexDirection: 'column', alignItems: 'center' },
+    lightboxImg: { maxWidth: '90vw', maxHeight: '80vh', objectFit: 'contain', borderRadius: '8px', display: 'block' },
+    lightboxClose: { position: 'absolute', top: '-40px', right: 0, background: 'none', border: 'none', color: '#ffffff', fontSize: '24px', cursor: 'pointer', padding: '4px 8px' },
+    lightboxArrow: { position: 'absolute', top: '50%', transform: 'translateY(-50%)', backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff', border: 'none', borderRadius: '50%', width: '44px', height: '44px', fontSize: '28px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 },
+    lightboxDots: { display: 'flex', gap: '8px', marginTop: '14px' },
+    lightboxDot: { width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.4)', cursor: 'pointer', transition: 'background-color 0.15s ease' },
+    lightboxDotActive: { backgroundColor: '#ffffff' },
     price: { fontSize: '24px', fontWeight: '700', color: '#1f73b7', margin: '0 0 16px' },
     addCartBtn: { padding: '12px 32px', backgroundColor: '#1f73b7', border: 'none', color: '#fff', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: 'pointer', marginBottom: '24px', transition: 'background-color 0.2s ease' },
     addCartBtnHover: { backgroundColor: '#145082' },

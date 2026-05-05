@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import orderService from '../../services/api/orderService';
+import { useLanguage } from '../../store/context/LanguageContext';
 
 const STATUS_COLORS = {
     pending:    { bg: '#fef9c3', color: '#854d0e', border: '#fde047' },
@@ -13,15 +14,10 @@ const STATUS_COLORS = {
 
 const Orders = () => {
     const navigate = useNavigate();
+    const { t } = useLanguage();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [toast, setToast] = useState('');
-
-    const showToast = (msg) => {
-        setToast(msg);
-        setTimeout(() => setToast(''), 3000);
-    };
 
     useEffect(() => {
         const load = async () => {
@@ -29,7 +25,7 @@ const Orders = () => {
                 const res = await orderService.getMyOrders();
                 setOrders(res.data || []);
             } catch {
-                setError('Failed to load orders');
+                setError(t('orders_load_fail'));
             } finally {
                 setLoading(false);
             }
@@ -43,18 +39,14 @@ const Orders = () => {
 
     return (
         <div style={s.page}>
-            {toast && <div style={s.toast}>{toast}</div>}
-
-            <h1 style={s.title}>My Orders</h1>
+            <h1 style={s.title}>{t('orders_title')}</h1>
 
             {error && <div style={s.errorBox}>{error}</div>}
 
             {!loading && !error && orders.length === 0 && (
                 <div style={s.emptyBox}>
-                    <p style={s.emptyText}>You have no orders yet</p>
-                    <button style={s.shopBtn} onClick={() => navigate('/')}>
-                        Browse Products
-                    </button>
+                    <p style={s.emptyText}>{t('orders_empty')}</p>
+                    <button style={s.shopBtn} onClick={() => navigate('/')}>{t('orders_browse')}</button>
                 </div>
             )}
 
@@ -62,31 +54,25 @@ const Orders = () => {
                 {orders.map((order) => {
                     const orderId = order._id || order.id;
                     const statusStyle = STATUS_COLORS[order.status] || STATUS_COLORS.pending;
-                    const date = new Date(order.createdAt).toLocaleDateString('en-GB', {
+                    const date = new Date(order.createdAt).toLocaleDateString('uk-UA', {
                         day: '2-digit', month: 'short', year: 'numeric',
                     });
+                    const itemCount = order.items?.length || 0;
 
                     return (
-                        <div
-                            key={orderId}
-                            style={s.card}
-                            onClick={() => navigate(`/orders/${orderId}`)}
-                        >
+                        <div key={orderId} style={s.card} onClick={() => navigate(`/orders/${orderId}`)}>
                             <div style={s.cardHeader}>
                                 <div>
                                     <div style={s.orderId}>Order #{orderId?.slice(-8).toUpperCase()}</div>
                                     <div style={s.orderDate}>{date}</div>
                                 </div>
                                 <div style={s.badgeRow}>
-                                    {order.isPaid && (
-                                        <span style={s.paidBadge}>✓ Paid</span>
-                                    )}
+                                    {order.isPaid && <span style={s.paidBadge}>{t('orders_paid')}</span>}
                                     <span style={{ ...s.statusBadge, backgroundColor: statusStyle.bg, color: statusStyle.color, border: `1px solid ${statusStyle.border}` }}>
-                                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                        {t(`status_${order.status}`)}
                                     </span>
                                 </div>
                             </div>
-
                             <div style={s.imageRow}>
                                 {order.items?.slice(0, 4).map((item, i) => {
                                     const img = item.product?.images?.[0];
@@ -100,10 +86,9 @@ const Orders = () => {
                                     <div style={s.moreItems}>+{order.items.length - 4}</div>
                                 )}
                             </div>
-
                             <div style={s.cardFooter}>
-                                <span style={s.itemCount}>{order.items?.length} item{order.items?.length !== 1 ? 's' : ''}</span>
-                                <span style={s.total}>${order.totalPrice?.toLocaleString()}</span>
+                                <span style={s.itemCount}>{itemCount} {itemCount === 1 ? t('orders_item') : t('orders_items')}</span>
+                                <span style={s.total}>{order.totalPrice?.toLocaleString()}₴</span>
                             </div>
                         </div>
                     );
@@ -123,7 +108,7 @@ const s = {
     emptyText: { color: '#6b7a8d', fontSize: '18px', marginBottom: '20px' },
     shopBtn: { backgroundColor: '#1f73b7', color: '#fff', border: 'none', padding: '12px 28px', borderRadius: '8px', cursor: 'pointer', fontSize: '15px', fontWeight: '600' },
     list: { display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', maxWidth: '800px' },
-    card: { backgroundColor: '#ffffff', border: '1px solid #e0e7ef', borderRadius: '12px', padding: '24px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', transition: 'box-shadow 0.2s ease, transform 0.2s ease' },
+    card: { backgroundColor: '#ffffff', border: '1px solid #e0e7ef', borderRadius: '12px', padding: '24px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', transition: 'box-shadow 0.2s ease' },
     cardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' },
     orderId: { fontSize: '15px', fontWeight: '700', color: '#040d15', marginBottom: '4px' },
     orderDate: { fontSize: '13px', color: '#6b7a8d' },
@@ -137,7 +122,6 @@ const s = {
     cardFooter: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', borderTop: '1px solid #e0e7ef' },
     itemCount: { fontSize: '13px', color: '#6b7a8d' },
     total: { fontSize: '18px', fontWeight: '700', color: '#1f73b7' },
-    toast: { position: 'fixed', bottom: '24px', right: '24px', backgroundColor: '#ffffff', border: '1px solid #e0e7ef', color: '#040d15', padding: '12px 20px', borderRadius: '10px', boxShadow: '0 4px 20px rgba(0,0,0,0.12)', zIndex: 1000, fontSize: '14px' },
 };
 
 export default Orders;

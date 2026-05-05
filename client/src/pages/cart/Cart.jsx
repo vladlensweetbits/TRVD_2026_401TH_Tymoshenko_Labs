@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../store/context/CartContext';
+import { useLanguage } from '../../store/context/LanguageContext';
 
 const Cart = () => {
     const { cart, cartLoading, updateItem, removeItem, clearCart } = useCart();
+    const { t } = useLanguage();
     const navigate = useNavigate();
     const [hoveredRemove, setHoveredRemove] = useState(null);
     const [hoveredClear, setHoveredClear] = useState(false);
@@ -18,12 +20,12 @@ const Cart = () => {
     return (
         <div style={s.page}>
             <div style={s.wrapper}>
-                <h1 style={s.title}>Your Cart</h1>
+                <h1 style={s.title}>{t('cart_title')}</h1>
 
                 {!cart?.items?.length ? (
                     <div style={s.emptyBox}>
-                        <p style={s.emptyText}>Your cart is empty</p>
-                        <button style={s.shopBtn} onClick={() => navigate('/')}>Browse Products</button>
+                        <p style={s.emptyText}>{t('cart_empty')}</p>
+                        <button style={s.shopBtn} onClick={() => navigate('/')}>{t('cart_browse')}</button>
                     </div>
                 ) : (
                     <>
@@ -32,35 +34,28 @@ const Cart = () => {
                                 const productId = item.product?._id || item.product?.id || item.product;
                                 const productName = item.product?.name || 'Product';
                                 const productImage = item.product?.images?.[0] || null;
-
                                 return (
                                     <div key={productId} style={s.itemCard}>
-                                        {productImage && (
-                                            <img src={productImage} alt={productName} style={s.itemImage} />
-                                        )}
+                                        {productImage && <img src={productImage} alt={productName} style={s.itemImage} />}
                                         <div style={s.itemInfo}>
                                             <div style={s.itemName}>{productName}</div>
-                                            <div style={s.itemPrice}>${item.price?.toLocaleString()} each</div>
+                                            <div style={s.itemPrice}>{item.price?.toLocaleString()}₴ {t('cart_each')}</div>
                                         </div>
                                         <div style={s.itemControls}>
-                                            <button
-                                                style={s.qtyBtn}
-                                                onClick={() => item.quantity > 1 ? updateItem(productId, item.quantity - 1) : removeItem(productId)}
-                                            >-</button>
+                                            <button style={s.qtyBtn}
+                                                    onClick={() => item.quantity > 1 ? updateItem(productId, item.quantity - 1) : removeItem(productId)}>-</button>
                                             <span style={s.qty}>{item.quantity}</span>
-                                            <button
-                                                style={s.qtyBtn}
-                                                onClick={() => updateItem(productId, item.quantity + 1)}
-                                            >+</button>
+                                            <button style={s.qtyBtn}
+                                                    onClick={() => updateItem(productId, item.quantity + 1)}>+</button>
                                         </div>
-                                        <div style={s.itemTotal}>${(item.price * item.quantity).toLocaleString()}</div>
+                                        <div style={s.itemTotal}>{(item.price * item.quantity).toLocaleString()}₴</div>
                                         <button
                                             onMouseEnter={() => setHoveredRemove(productId)}
                                             onMouseLeave={() => setHoveredRemove(null)}
                                             style={{ ...s.removeBtn, ...(hoveredRemove === productId ? s.removeBtnHover : {}) }}
                                             onClick={() => removeItem(productId)}
                                         >
-                                            Remove
+                                            {t('cart_remove')}
                                         </button>
                                     </div>
                                 );
@@ -69,8 +64,8 @@ const Cart = () => {
 
                         <div style={s.summary}>
                             <div style={s.summaryRow}>
-                                <span style={s.summaryLabel}>Total ({cart.items.reduce((s, i) => s + i.quantity, 0)} items)</span>
-                                <span style={s.summaryTotal}>${total.toLocaleString()}</span>
+                                <span style={s.summaryLabel}>{t('cart_total')} ({cart.items.reduce((s, i) => s + i.quantity, 0)} {t('cart_items')})</span>
+                                <span style={s.summaryTotal}>{total.toLocaleString()}₴</span>
                             </div>
                             <div style={s.summaryActions}>
                                 <button
@@ -79,7 +74,7 @@ const Cart = () => {
                                     style={{ ...s.clearBtn, ...(hoveredClear ? s.clearBtnHover : {}) }}
                                     onClick={clearCart}
                                 >
-                                    Clear Cart
+                                    {t('cart_clear')}
                                 </button>
                                 <button
                                     onMouseEnter={() => setHoveredCheckout(true)}
@@ -87,7 +82,7 @@ const Cart = () => {
                                     style={{ ...s.checkoutBtn, ...(hoveredCheckout ? s.checkoutBtnHover : {}) }}
                                     onClick={() => navigate('/checkout')}
                                 >
-                                    Proceed to Checkout
+                                    {t('cart_checkout')}
                                 </button>
                             </div>
                         </div>
