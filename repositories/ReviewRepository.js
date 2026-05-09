@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Review = require('../models/Review');
 
 class ReviewRepository {
@@ -14,7 +15,8 @@ class ReviewRepository {
 
     async findByProduct(productId) {
         return await Review.find({ product: productId })
-            .populate('user', 'name');
+            .populate('user', 'name')
+            .sort({ createdAt: -1 });
     }
 
     async findByUser(userId) {
@@ -22,8 +24,13 @@ class ReviewRepository {
             .populate('product', 'name');
     }
 
+    async findByUserAndProduct(userId, productId) {
+        return await Review.find({ user: userId, product: productId });
+    }
+
     async update(id, updateData) {
-        return await Review.findByIdAndUpdate(id, updateData, { new: true });
+        return await Review.findByIdAndUpdate(id, updateData, { new: true })
+            .populate('user', 'name');
     }
 
     async delete(id) {
@@ -31,8 +38,12 @@ class ReviewRepository {
     }
 
     async getAverageRating(productId) {
+        const objectId = typeof productId === 'string'
+            ? new mongoose.Types.ObjectId(productId)
+            : productId;
+
         const result = await Review.aggregate([
-            { $match: { product: productId } },
+            { $match: { product: objectId } },
             { $group: { _id: '$product', avgRating: { $avg: '$rating' } } }
         ]);
         return result[0]?.avgRating || 0;

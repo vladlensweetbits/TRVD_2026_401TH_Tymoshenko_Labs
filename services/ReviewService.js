@@ -3,12 +3,21 @@ const productRepository = require('../repositories/ProductRepository');
 
 class ReviewService {
     async createReview(reviewData) {
+        const existingReviews = await reviewRepository.findByUserAndProduct(
+            reviewData.user,
+            reviewData.product
+        );
+
+        if (existingReviews.length >= 5) {
+            throw new Error('You have reached the maximum of 5 reviews for this product');
+        }
+
         const review = await reviewRepository.create(reviewData);
 
         const avgRating = await reviewRepository.getAverageRating(reviewData.product);
         await productRepository.updateRating(reviewData.product, avgRating);
 
-        return review;
+        return await reviewRepository.findById(review._id);
     }
 
     async getReviewById(id) {
@@ -33,7 +42,6 @@ class ReviewService {
             throw new Error('Review not found');
         }
 
-        // Recalculate product rating after update
         const avgRating = await reviewRepository.getAverageRating(review.product);
         await productRepository.updateRating(review.product, avgRating);
 
@@ -48,8 +56,8 @@ class ReviewService {
 
         await reviewRepository.delete(id);
 
-        const avgRating = await reviewRepository.getAverageRating(review.product);
-        await productRepository.updateRating(review.product, avgRating);
+        const avgRating = await reviewRepository.getAverageRating(review.product._id || review.product);
+        await productRepository.updateRating(review.product._id || review.product, avgRating);
 
         return review;
     }
