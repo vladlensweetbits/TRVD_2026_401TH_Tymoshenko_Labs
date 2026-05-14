@@ -147,13 +147,17 @@ const ProductList = () => {
             <div style={s.grid}>
                 {products.map((product, index) => {
                     const productId = product._id || product.id || index;
+                    const outOfStock = product.stock === 0;
                     return (
                         <div key={productId} style={s.card}>
                             {product.images && product.images.length > 0 && (
                                 <img
                                     src={product.images[0]}
                                     alt={product.name}
-                                    style={s.cardImage}
+                                    style={{
+                                        ...s.cardImage,
+                                        ...(outOfStock ? s.cardImageGrey : {}),
+                                    }}
                                 />
                             )}
                             <div style={s.cardCategory}>{product.category}</div>
@@ -164,8 +168,8 @@ const ProductList = () => {
                             </p>
                             <div style={s.cardBottom}>
                                 <span style={s.price}>${product.price?.toLocaleString()}</span>
-                                <span style={product.stock > 0 ? s.inStock : s.outStock}>
-                                    {product.stock > 0 ? `In stock: ${product.stock}` : 'Out of stock'}
+                                <span style={outOfStock ? s.outStock : s.inStock}>
+                                    {outOfStock ? 'Out of stock' : `In stock: ${product.stock}`}
                                 </span>
                             </div>
                             <div style={s.cardActions}>
@@ -181,9 +185,18 @@ const ProductList = () => {
                                     <button
                                         onMouseEnter={() => setHoveredCart(productId)}
                                         onMouseLeave={() => setHoveredCart(null)}
-                                        style={{ ...s.cartBtn, ...(hoveredCart === productId ? s.cartBtnHover : {}) }}
+                                        disabled={outOfStock}
+                                        style={{
+                                            ...s.cartBtn,
+                                            ...(hoveredCart === productId && !outOfStock ? s.cartBtnHover : {}),
+                                            ...(outOfStock ? s.cartBtnDisabled : {}),
+                                        }}
                                         onClick={async (e) => {
                                             e.preventDefault();
+                                            if (outOfStock) {
+                                                showToast('This item is out of stock');
+                                                return;
+                                            }
                                             try {
                                                 await addToCart(productId);
                                                 showToast('Added to cart');
@@ -238,7 +251,8 @@ const s = {
     select: { padding: '10px 14px', backgroundColor: '#ffffff', border: '1px solid #d1dce8', borderRadius: '8px', color: '#040d15', fontSize: '14px', cursor: 'pointer', outline: 'none' },
     grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' },
     card: { backgroundColor: '#ffffff', borderRadius: '12px', padding: '20px', border: '1px solid #e0e7ef', display: 'flex', flexDirection: 'column', gap: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' },
-    cardImage: { width: '100%', height: '200px', objectFit: 'cover', borderRadius: '8px' },
+    cardImage: { width: '100%', height: '200px', objectFit: 'cover', borderRadius: '8px', transition: 'filter 0.2s ease' },
+    cardImageGrey: { filter: 'grayscale(100%)', opacity: 0.6 },
     cardCategory: { fontSize: '11px', color: '#1f73b7', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '1px' },
     cardName: { fontSize: '16px', fontWeight: '700', color: '#040d15', margin: 0 },
     cardDesc: { fontSize: '13px', color: '#6b7a8d', margin: 0, lineHeight: '1.5' },
@@ -268,6 +282,7 @@ const s = {
     deleteBtnHover: { backgroundColor: '#b91c1c' },
     cartBtn: { padding: '7px 14px', backgroundColor: 'transparent', border: '1px solid #1f73b7', color: '#1f73b7', borderRadius: '6px', fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s ease' },
     cartBtnHover: { backgroundColor: '#1f73b7', color: '#ffffff' },
+    cartBtnDisabled: { border: '1px solid #d1dce8', color: '#94a3b8', cursor: 'not-allowed', opacity: 0.6 },
 };
 
 export default ProductList;

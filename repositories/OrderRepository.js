@@ -9,18 +9,19 @@ class OrderRepository {
     async findById(id) {
         return await Order.findById(id)
             .populate('user', 'name email')
-            .populate('items.product', 'name price');
+            .populate('items.product', 'name price images');
     }
 
     async findByUser(userId) {
         return await Order.find({ user: userId })
-            .populate('items.product', 'name price');
+            .populate('items.product', 'name price images')
+            .sort({ createdAt: -1 });
     }
 
     async findAll() {
         return await Order.find()
             .populate('user', 'name email')
-            .populate('items.product', 'name price');
+            .populate('items.product', 'name price images');
     }
 
     async updateStatus(id, status) {
