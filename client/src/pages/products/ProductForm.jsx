@@ -5,22 +5,13 @@ import { useLanguage } from '../../store/context/LanguageContext';
 
 const CATEGORIES = ['CPU', 'GPU', 'RAM', 'Storage', 'Motherboard', 'PSU', 'Case', 'Cooling'];
 
-const emptyForm = {
-    name: '',
-    description: '',
-    price: '',
-    category: '',
-    stock: '',
-    images: '',
-};
+const emptyForm = { name: '', description: '', price: '', category: '', stock: '', images: '' };
 
 const isValidUrl = (url) => {
     try {
         const parsed = new URL(url);
         return parsed.protocol === 'http:' || parsed.protocol === 'https:';
-    } catch {
-        return false;
-    }
+    } catch { return false; }
 };
 
 const ProductForm = () => {
@@ -34,13 +25,8 @@ const ProductForm = () => {
     const [loading, setLoading] = useState(false);
     const [fetchLoading, setFetchLoading] = useState(isEdit);
     const [toast, setToast] = useState('');
-    const [backHovered, setBackHovered] = useState(false);
-    const [submitHovered, setSubmitHovered] = useState(false);
 
-    const showToast = (msg) => {
-        setToast(msg);
-        setTimeout(() => setToast(''), 3000);
-    };
+    const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
 
     useEffect(() => {
         if (!isEdit) return;
@@ -56,11 +42,8 @@ const ProductForm = () => {
                     stock: p.stock ?? '',
                     images: (p.images || []).join(', '),
                 });
-            } catch {
-                showToast(t('form_save_fail'));
-            } finally {
-                setFetchLoading(false);
-            }
+            } catch { showToast(t('form_save_fail')); }
+            finally { setFetchLoading(false); }
         };
         load();
     }, [id]);
@@ -69,21 +52,15 @@ const ProductForm = () => {
         const e = {};
         if (!form.name.trim()) e.name = t('form_name') + ' is required';
         if (!form.description.trim()) e.description = t('form_description') + ' is required';
-        if (!form.price || isNaN(Number(form.price)) || Number(form.price) < 0)
-            e.price = t('form_price') + ' is invalid';
+        if (!form.price || isNaN(Number(form.price)) || Number(form.price) < 0) e.price = t('form_price') + ' is invalid';
         if (!form.category) e.category = t('form_category') + ' is required';
-        if (form.stock === '' || isNaN(Number(form.stock)) || Number(form.stock) < 0)
-            e.stock = t('form_stock') + ' is invalid';
+        if (form.stock === '' || isNaN(Number(form.stock)) || Number(form.stock) < 0) e.stock = t('form_stock') + ' is invalid';
         if (!form.images.trim()) {
             e.images = 'At least one image URL is required';
         } else {
             const urls = form.images.split(',').map(u => u.trim()).filter(Boolean);
-            if (urls.length === 0) {
-                e.images = 'At least one image URL is required';
-            } else {
-                const invalidUrls = urls.filter(u => !isValidUrl(u));
-                if (invalidUrls.length > 0) e.images = t('form_invalid_image');
-            }
+            if (urls.length === 0) e.images = 'At least one image URL is required';
+            else if (urls.filter(u => !isValidUrl(u)).length > 0) e.images = t('form_invalid_image');
         }
         return e;
     };
@@ -97,7 +74,6 @@ const ProductForm = () => {
         e.preventDefault();
         const errs = validate();
         if (Object.keys(errs).length > 0) { setErrors(errs); return; }
-
         setLoading(true);
         try {
             const payload = {
@@ -108,7 +84,6 @@ const ProductForm = () => {
                 stock: Number(form.stock),
                 images: form.images.split(',').map(s => s.trim()).filter(Boolean),
             };
-
             if (isEdit) {
                 await productService.update(id, payload);
                 showToast(t('form_save_success'));
@@ -120,125 +95,97 @@ const ProductForm = () => {
             }
         } catch (err) {
             showToast(err.response?.data?.message || t('form_save_fail'));
-        } finally {
-            setLoading(false);
-        }
+        } finally { setLoading(false); }
     };
 
     if (fetchLoading) return (
-        <div style={s.page}><div style={s.center}><div style={s.spinner} /></div></div>
+        <div className="form-page-wrapper">
+            <div className="center-loader"><div className="shared-spinner" /></div>
+        </div>
     );
 
     return (
-        <div style={s.page}>
-            {toast && <div style={s.toast}>{toast}</div>}
+        <div className="form-page-wrapper">
+            {toast && <div className="shared-toast">{toast}</div>}
 
-            <button
-                onMouseEnter={() => setBackHovered(true)}
-                onMouseLeave={() => setBackHovered(false)}
-                style={{ ...s.backBtn, ...(backHovered ? s.backBtnHover : {}) }}
-                onClick={() => navigate(isEdit ? `/products/${id}` : '/')}
-            >
+            <button className="back-btn" onClick={() => navigate(isEdit ? `/products/${id}` : '/')}>
                 {t('form_back')}
             </button>
 
-            <div style={s.card}>
-                <h2 style={s.title}>{isEdit ? t('form_edit_title') : t('form_add_title')}</h2>
+            <div className="form-page-card">
+                <h2 className="form-page-title">{isEdit ? t('form_edit_title') : t('form_add_title')}</h2>
 
                 <form onSubmit={handleSubmit} noValidate>
-                    <Field label={t('form_name')} error={errors.name}>
+                    <div className="form-field">
+                        <label className="form-label">{t('form_name')}</label>
                         <input
-                            style={{ ...s.input, ...(errors.name ? s.inputErr : {}) }}
+                            className={`form-input${errors.name ? ' has-error' : ''}`}
                             name="name" value={form.name} onChange={handleChange}
                             placeholder="e.g. Intel Core i9-14900K"
                         />
-                    </Field>
+                        {errors.name && <span className="field-error">{errors.name}</span>}
+                    </div>
 
-                    <Field label={t('form_category')} error={errors.category}>
+                    <div className="form-field">
+                        <label className="form-label">{t('form_category')}</label>
                         <select
-                            style={{ ...s.input, ...(errors.category ? s.inputErr : {}) }}
+                            className={`form-input${errors.category ? ' has-error' : ''}`}
                             name="category" value={form.category} onChange={handleChange}
                         >
                             <option value="">Select a category</option>
                             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
-                    </Field>
-
-                    <div style={s.row}>
-                        <Field label={t('form_price')} error={errors.price} style={{ flex: 1 }}>
-                            <input
-                                style={{ ...s.input, ...(errors.price ? s.inputErr : {}) }}
-                                name="price" type="number" min="0" step="0.01"
-                                value={form.price} onChange={handleChange}
-                                placeholder="0.00"
-                            />
-                        </Field>
-                        <Field label={t('form_stock')} error={errors.stock} style={{ flex: 1 }}>
-                            <input
-                                style={{ ...s.input, ...(errors.stock ? s.inputErr : {}) }}
-                                name="stock" type="number" min="0"
-                                value={form.stock} onChange={handleChange}
-                                placeholder="0"
-                            />
-                        </Field>
+                        {errors.category && <span className="field-error">{errors.category}</span>}
                     </div>
 
-                    <Field label={t('form_description')} error={errors.description}>
+                    <div className="form-row">
+                        <div className="form-field" style={{ flex: 1 }}>
+                            <label className="form-label">{t('form_price')}</label>
+                            <input
+                                className={`form-input${errors.price ? ' has-error' : ''}`}
+                                name="price" type="number" min="0" step="0.01"
+                                value={form.price} onChange={handleChange} placeholder="0.00"
+                            />
+                            {errors.price && <span className="field-error">{errors.price}</span>}
+                        </div>
+                        <div className="form-field" style={{ flex: 1 }}>
+                            <label className="form-label">{t('form_stock')}</label>
+                            <input
+                                className={`form-input${errors.stock ? ' has-error' : ''}`}
+                                name="stock" type="number" min="0"
+                                value={form.stock} onChange={handleChange} placeholder="0"
+                            />
+                            {errors.stock && <span className="field-error">{errors.stock}</span>}
+                        </div>
+                    </div>
+
+                    <div className="form-field">
+                        <label className="form-label">{t('form_description')}</label>
                         <textarea
-                            style={{ ...s.input, ...s.textarea, ...(errors.description ? s.inputErr : {}) }}
+                            className={`form-input form-textarea${errors.description ? ' has-error' : ''}`}
                             name="description" value={form.description} onChange={handleChange}
                             placeholder="Detailed product description..." rows={4}
                         />
-                    </Field>
+                        {errors.description && <span className="field-error">{errors.description}</span>}
+                    </div>
 
-                    <Field label={t('form_images')} error={errors.images}>
+                    <div className="form-field">
+                        <label className="form-label">{t('form_images')}</label>
                         <input
-                            style={{ ...s.input, ...(errors.images ? s.inputErr : {}) }}
+                            className={`form-input${errors.images ? ' has-error' : ''}`}
                             name="images" value={form.images} onChange={handleChange}
                             placeholder={t('form_image_placeholder')}
                         />
-                    </Field>
+                        {errors.images && <span className="field-error">{errors.images}</span>}
+                    </div>
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        onMouseEnter={() => setSubmitHovered(true)}
-                        onMouseLeave={() => setSubmitHovered(false)}
-                        style={{ ...s.submitBtn, ...(submitHovered && !loading ? s.submitBtnHover : {}) }}
-                    >
+                    <button type="submit" disabled={loading} className="form-submit-btn">
                         {loading ? t('form_saving') : t('form_save')}
                     </button>
                 </form>
             </div>
         </div>
     );
-};
-
-const Field = ({ label, error, children, style = {} }) => (
-    <div style={{ marginBottom: '18px', ...style }}>
-        <label style={{ display: 'block', color: '#040d15', fontSize: '13px', fontWeight: '500', marginBottom: '6px' }}>
-            {label}
-        </label>
-        {children}
-        {error && <span style={{ color: '#dc2626', fontSize: '12px', marginTop: '4px', display: 'block' }}>{error}</span>}
-    </div>
-);
-
-const s = {
-    page: { minHeight: '100vh', backgroundColor: '#f0f4f8', padding: '32px', color: '#040d15' },
-    center: { display: 'flex', justifyContent: 'center', padding: '80px 0' },
-    spinner: { width: '40px', height: '40px', border: '4px solid #d1dce8', borderTop: '4px solid #1f73b7', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
-    backBtn: { background: 'transparent', border: '1px solid #d1dce8', color: '#6b7a8d', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', marginBottom: '24px', transition: 'all 0.2s ease' },
-    backBtnHover: { backgroundColor: '#e2e8f0', borderColor: '#94a3b8' },
-    card: { backgroundColor: '#ffffff', border: '1px solid #e0e7ef', borderRadius: '16px', padding: '40px', maxWidth: '640px', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' },
-    title: { fontSize: '22px', fontWeight: '700', color: '#040d15', margin: '0 0 28px' },
-    row: { display: 'flex', gap: '16px' },
-    input: { width: '100%', padding: '10px 14px', backgroundColor: '#f8fafc', border: '1px solid #d1dce8', borderRadius: '8px', color: '#040d15', fontSize: '14px', outline: 'none', boxSizing: 'border-box' },
-    inputErr: { border: '1px solid #dc2626' },
-    textarea: { resize: 'vertical', fontFamily: 'inherit' },
-    submitBtn: { width: '100%', padding: '12px', backgroundColor: '#1f73b7', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: 'pointer', marginTop: '8px', transition: 'background-color 0.2s ease' },
-    submitBtnHover: { backgroundColor: '#185d99' },
-    toast: { position: 'fixed', bottom: '24px', right: '24px', backgroundColor: '#ffffff', border: '1px solid #e0e7ef', color: '#040d15', padding: '12px 20px', borderRadius: '10px', boxShadow: '0 4px 20px rgba(0,0,0,0.12)', zIndex: 1000, fontSize: '14px' },
 };
 
 export default ProductForm;

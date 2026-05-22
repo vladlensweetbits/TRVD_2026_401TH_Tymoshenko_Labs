@@ -46,43 +46,27 @@ const Footer = () => {
     ];
 
     return (
-        <footer style={s.footer}>
-            <div style={s.inner}>
-                <div style={s.brand}>ComTech</div>
-                <div style={s.socials}>
+        <footer className="footer">
+            <div className="footer-inner">
+                <div className="footer-brand">ComTech</div>
+                <div className="footer-socials">
                     {socials.map((social) => (
-
                     <a
                         key={social.name}
                         href={social.href}
                         title={social.name}
-                        style={s.socialLink}
-                        onMouseEnter={e => {
-                        e.currentTarget.style.color = '#ffffff';
-                        e.currentTarget.style.borderColor = '#ffffff';
-                    }}
-                        onMouseLeave={e => {
-                        e.currentTarget.style.color = '#6b7a8d';
-                        e.currentTarget.style.borderColor = '#2a3340';
-                    }}
+                        className="footer-social-link"
                         >
                     {social.icon}
                         </a>
                         ))}
                 </div>
-                <div style={s.copy}>© {new Date().getFullYear()} ComTech. {t('footer_rights')}</div>
+                <div className="footer-copy">
+                    © {new Date().getFullYear()} ComTech. {t('footer_rights')}
+                </div>
             </div>
         </footer>
     );
-};
-
-const s = {
-    footer: { backgroundColor: '#151a1e', borderTop: '1px solid #2a3340', marginTop: 'auto' },
-    inner: { maxWidth: '1200px', margin: '0 auto', padding: '32px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' },
-    brand: { fontSize: '20px', fontWeight: '700', color: '#ffffff' },
-    socials: { display: 'flex', gap: '12px' },
-    socialLink: { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '8px', border: '1px solid #2a3340', color: '#6b7a8d', textDecoration: 'none', transition: 'color 0.2s ease, border-color 0.2s ease' },
-    copy: { fontSize: '13px', color: '#6b7a8d' },
 };
 
 export default Footer;

@@ -66,7 +66,7 @@ const OrderDetail = () => {
     );
 
     if (error || !order) return (
-        <div style={s.page}>
+        <div className="order-detail-page" style={s.page}>
             <div style={s.errorBox}>{error || t('order_not_found')}</div>
             <button style={s.backBtn} onClick={() => navigate('/orders')}>{t('order_back')}</button>
         </div>
@@ -85,7 +85,7 @@ const OrderDetail = () => {
     const lastName = userNameParts.slice(1).join(' ') || '';
 
     return (
-        <div style={s.page}>
+        <div className="order-detail-page" style={s.page}>
             {toast && <div style={s.toast}>{toast}</div>}
 
             {confirmCancel && (
@@ -125,13 +125,14 @@ const OrderDetail = () => {
             </button>
 
             <div style={s.wrapper}>
-                <div style={s.card}>
-                    <div style={s.cardHeader}>
+                <div className="order-detail-card" style={s.card}>
+
+                    <div className="order-detail-header" style={s.cardHeader}>
                         <div>
                             <h1 style={s.title}>Order #{orderId?.slice(-8).toUpperCase()}</h1>
                             <p style={s.date}>{date}</p>
                         </div>
-                        <div style={s.badgeRow}>
+                        <div className="order-detail-badges" style={s.badgeRow}>
                             {order.isPaid ? (
                                 <span style={s.paidBadge}>{t('order_paid_online')}</span>
                             ) : (
@@ -143,34 +144,36 @@ const OrderDetail = () => {
                         </div>
                     </div>
 
+                    {/* Customer Info */}
                     <div style={s.section}>
                         <h3 style={s.sectionTitle}>{t('order_customer_info')}</h3>
                         <div style={s.deliveryGrid}>
-                            <div style={s.deliveryItem}>
-                                <span style={s.deliveryLabel}>{t('order_first_name')}</span>
-                                <span style={s.deliveryValue}>{firstName}</span>
+                            <div className="delivery-row-item" style={s.deliveryItem}>
+                                <span className="delivery-row-label" style={s.deliveryLabel}>{t('order_first_name')}</span>
+                                <span className="delivery-row-value" style={s.deliveryValue}>{firstName}</span>
                             </div>
                             {lastName && (
-                                <div style={s.deliveryItem}>
-                                    <span style={s.deliveryLabel}>{t('order_last_name')}</span>
-                                    <span style={s.deliveryValue}>{lastName}</span>
+                                <div className="delivery-row-item" style={s.deliveryItem}>
+                                    <span className="delivery-row-label" style={s.deliveryLabel}>{t('order_last_name')}</span>
+                                    <span className="delivery-row-value" style={s.deliveryValue}>{lastName}</span>
                                 </div>
                             )}
                             {order.guestInfo?.email && (
-                                <div style={s.deliveryItem}>
-                                    <span style={s.deliveryLabel}>{t('order_email')}</span>
-                                    <span style={s.deliveryValue}>{order.guestInfo.email}</span>
+                                <div className="delivery-row-item" style={s.deliveryItem}>
+                                    <span className="delivery-row-label" style={s.deliveryLabel}>{t('order_email')}</span>
+                                    <span className="delivery-row-value" style={s.deliveryValue}>{order.guestInfo.email}</span>
                                 </div>
                             )}
-                            <div style={s.deliveryItem}>
-                                <span style={s.deliveryLabel}>{t('order_phone')}</span>
-                                <span style={s.deliveryValue}>{order.address?.phone || 'N/A'}</span>
+                            <div className="delivery-row-item" style={s.deliveryItem}>
+                                <span className="delivery-row-label" style={s.deliveryLabel}>{t('order_phone')}</span>
+                                <span className="delivery-row-value" style={s.deliveryValue}>{order.address?.phone || 'N/A'}</span>
                             </div>
                         </div>
                     </div>
 
                     <div style={s.divider} />
 
+                    {/* Items */}
                     <div style={s.section}>
                         <h3 style={s.sectionTitle}>{t('order_items')}</h3>
                         <div style={s.itemList}>
@@ -199,50 +202,55 @@ const OrderDetail = () => {
 
                     <div style={s.divider} />
 
+                    {/* Delivery */}
                     <div style={s.section}>
                         <h3 style={s.sectionTitle}>{t('order_delivery')}</h3>
                         <div style={s.deliveryGrid}>
-                            <div style={s.deliveryItem}>
-                                <span style={s.deliveryLabel}>{t('order_delivery_service')}</span>
-                                <span style={s.deliveryValue}>
+                            <div className="delivery-row-item" style={s.deliveryItem}>
+                                <span className="delivery-row-label" style={s.deliveryLabel}>{t('order_delivery_service')}</span>
+                                <span className="delivery-row-value" style={s.deliveryValue}>
                                     {order.address?.street?.includes(',')
                                         ? order.address.street.split(',')[0].trim()
                                         : 'N/A'}
                                 </span>
                             </div>
-                            <div style={s.deliveryItem}>
-                                <span style={s.deliveryLabel}>{t('order_warehouse')}</span>
-                                <span style={s.deliveryValue}>
+                            <div className="delivery-row-item" style={s.deliveryItem}>
+                                <span className="delivery-row-label" style={s.deliveryLabel}>{t('order_warehouse')}</span>
+                                <span className="delivery-row-value" style={s.deliveryValue}>
                                     {order.address?.street?.includes(',')
                                         ? order.address.street.split(',').slice(1).join(',').trim()
                                         : order.address?.street}
                                 </span>
                             </div>
-                            <div style={s.deliveryItem}>
-                                <span style={s.deliveryLabel}>{t('order_city')}</span>
-                                <span style={s.deliveryValue}>{order.address?.city}</span>
+                            <div className="delivery-row-item" style={s.deliveryItem}>
+                                <span className="delivery-row-label" style={s.deliveryLabel}>{t('order_city')}</span>
+                                <span className="delivery-row-value" style={s.deliveryValue}>{order.address?.city}</span>
                             </div>
-                            <div style={s.deliveryItem}>
-                                <span style={s.deliveryLabel}>{t('order_postal_code')}</span>
-                                <span style={s.deliveryValue}>{order.address?.zip}</span>
+                            <div className="delivery-row-item" style={s.deliveryItem}>
+                                <span className="delivery-row-label" style={s.deliveryLabel}>{t('order_postal_code')}</span>
+                                <span className="delivery-row-value" style={s.deliveryValue}>{order.address?.zip}</span>
                             </div>
                         </div>
                     </div>
 
                     <div style={s.divider} />
 
+                    {/* Payment */}
                     <div style={s.section}>
                         <h3 style={s.sectionTitle}>{t('order_payment')}</h3>
                         <div style={s.deliveryGrid}>
-                            <div style={s.deliveryItem}>
-                                <span style={s.deliveryLabel}>{t('order_payment_method')}</span>
-                                <span style={s.deliveryValue}>
+                            <div className="delivery-row-item" style={s.deliveryItem}>
+                                <span className="delivery-row-label" style={s.deliveryLabel}>{t('order_payment_method')}</span>
+                                <span className="delivery-row-value" style={s.deliveryValue}>
                                     {order.isPaid ? t('order_online_card') : t('order_cash_delivery')}
                                 </span>
                             </div>
-                            <div style={s.deliveryItem}>
-                                <span style={s.deliveryLabel}>{t('order_payment_status')}</span>
-                                <span style={{ ...s.deliveryValue, color: order.isPaid ? '#16a34a' : '#854d0e', fontWeight: '600' }}>
+                            <div className="delivery-row-item" style={s.deliveryItem}>
+                                <span className="delivery-row-label" style={s.deliveryLabel}>{t('order_payment_status')}</span>
+                                <span
+                                    className="delivery-value-colored"
+                                    style={{ ...s.deliveryValue, color: order.isPaid ? '#16a34a' : '#854d0e', fontWeight: '600' }}
+                                >
                                     {order.isPaid ? t('order_paid_status') : t('order_pending_payment')}
                                 </span>
                             </div>
@@ -283,10 +291,10 @@ const s = {
     cardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '28px' },
     title: { fontSize: '22px', fontWeight: '700', color: '#040d15', margin: '0 0 6px' },
     date: { fontSize: '13px', color: '#6b7a8d', margin: 0 },
-    badgeRow: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' },
+    badgeRow: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px', flexWrap: 'wrap' },
     paidBadge: { padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600', backgroundColor: '#dcfce7', color: '#166534', border: '1px solid #86efac', whiteSpace: 'nowrap' },
     unpaidBadge: { padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600', backgroundColor: '#fef9c3', color: '#854d0e', border: '1px solid #fde047', whiteSpace: 'nowrap' },
-    statusBadge: { padding: '6px 16px', borderRadius: '20px', fontSize: '13px', fontWeight: '600', whiteSpace: 'nowrap' },
+    statusBadge: { padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600', whiteSpace: 'nowrap' },
     section: { marginBottom: '24px' },
     sectionTitle: { fontSize: '13px', color: '#6b7a8d', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '600', marginBottom: '16px' },
     itemList: { display: 'flex', flexDirection: 'column', gap: '12px' },
