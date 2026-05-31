@@ -36,7 +36,6 @@ const Navbar = () => {
                 <Link to="/" className="navbar-logo" onClick={close}>ComTech</Link>
             </div>
 
-            {/* ≥1000px full desktop */}
             <div className="navbar-desktop">
                 {user ? (
                     <>
@@ -67,9 +66,7 @@ const Navbar = () => {
                 </button>
             </div>
 
-            {/* <1000px – grouped with consistent gap */}
             <div className="navbar-mobile-right">
-                {/* 768–999px: Admin + My Orders in navbar */}
                 {user && (
                     <div className="navbar-tablet">
                         {user.role === 'admin' && (
@@ -79,18 +76,15 @@ const Navbar = () => {
                     </div>
                 )}
 
-                {/* Cart icon */}
                 <Link to="/cart" className="nav-cart-icon" onClick={close} aria-label="Cart">
                     <CartIcon />
                     {itemCount > 0 && <span className="cart-badge">{itemCount}</span>}
                 </Link>
 
-                {/* Language before burger */}
                 <button onClick={toggleLanguage} className="nav-lang-mobile">
                     {language === 'en' ? 'EN' : 'UA'}
                 </button>
 
-                {/* Burger */}
                 <button
                     className={`burger-btn${menuOpen ? ' burger-open' : ''}`}
                     onClick={() => setMenuOpen(p => !p)}
@@ -100,12 +94,10 @@ const Navbar = () => {
                 </button>
             </div>
 
-            {/* Mobile dropdown – absolute so navbar height stays fixed */}
             {menuOpen && (
                 <div className="mobile-menu">
                     {user ? (
                         <>
-                            {/* Only at <768px: Admin + My Orders */}
                             {user.role === 'admin' && (
                                 <Link to="/admin" className="mobile-item mobile-item-small" onClick={close}>
                                     {t('nav_admin')}

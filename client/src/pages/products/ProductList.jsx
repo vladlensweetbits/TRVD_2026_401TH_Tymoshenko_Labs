@@ -85,20 +85,23 @@ const ProductList = () => {
         <div className="page-container page-wrapper">
             {toast && <div className="shared-toast">{toast}</div>}
 
-            {/* Lightbox */}
             {lightbox && (
                 <div className="lightbox-overlay" onClick={() => setLightbox(null)}>
                     <div className="lightbox-content" onClick={e => e.stopPropagation()}>
                         <button className="lightbox-close" onClick={() => setLightbox(null)}>✕</button>
-                        {lightbox.images.length > 1 && (
-                            <button className="lightbox-arrow" style={{ left: '12px' }}
-                                    onClick={() => setLightbox(lb => ({ ...lb, index: (lb.index - 1 + lb.images.length) % lb.images.length }))}>‹</button>
-                        )}
-                        <img src={lightbox.images[lightbox.index]} alt="" className="lightbox-img" />
-                        {lightbox.images.length > 1 && (
-                            <button className="lightbox-arrow" style={{ right: '12px' }}
-                                    onClick={() => setLightbox(lb => ({ ...lb, index: (lb.index + 1) % lb.images.length }))}>›</button>
-                        )}
+
+                        <div className="lightbox-img-wrap">
+                            {lightbox.images.length > 1 && (
+                                <button className="lightbox-arrow" style={{ left: '12px' }}
+                                        onClick={() => setLightbox(lb => ({ ...lb, index: (lb.index - 1 + lb.images.length) % lb.images.length }))}>‹</button>
+                            )}
+                            <img src={lightbox.images[lightbox.index]} alt="" className="lightbox-img" />
+                            {lightbox.images.length > 1 && (
+                                <button className="lightbox-arrow" style={{ right: '12px' }}
+                                        onClick={() => setLightbox(lb => ({ ...lb, index: (lb.index + 1) % lb.images.length }))}>›</button>
+                            )}
+                        </div>
+
                         {lightbox.images.length > 1 && (
                             <div className="lightbox-dots">
                                 {lightbox.images.map((_, i) => (
@@ -112,7 +115,6 @@ const ProductList = () => {
                 </div>
             )}
 
-            {/* Delete confirm */}
             {confirmDelete && (
                 <div className="shared-overlay">
                     <div className="shared-modal">
@@ -129,7 +131,6 @@ const ProductList = () => {
                 </div>
             )}
 
-            {/* Filter modal */}
             {showFilterModal && (
                 <div className="filter-modal-overlay" onClick={() => setShowFilterModal(false)}>
                     <div className="filter-modal" onClick={e => e.stopPropagation()}>
@@ -154,7 +155,6 @@ const ProductList = () => {
                 </div>
             )}
 
-            {/* Header */}
             <div className="catalogue-header">
                 <h1 className="catalogue-title">{t('catalogue_title')}</h1>
                 {canManageProducts && (
@@ -164,7 +164,6 @@ const ProductList = () => {
                 )}
             </div>
 
-            {/* Filters – input + [filter icon][search btn] */}
             <div className="filters-wrapper">
                 <form id="product-search-form" className="search-form-el" onSubmit={handleSearch}>
                     <input

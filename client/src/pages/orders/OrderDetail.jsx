@@ -144,7 +144,6 @@ const OrderDetail = () => {
                         </div>
                     </div>
 
-                    {/* Customer Info */}
                     <div style={s.section}>
                         <h3 style={s.sectionTitle}>{t('order_customer_info')}</h3>
                         <div style={s.deliveryGrid}>
@@ -173,7 +172,6 @@ const OrderDetail = () => {
 
                     <div style={s.divider} />
 
-                    {/* Items */}
                     <div style={s.section}>
                         <h3 style={s.sectionTitle}>{t('order_items')}</h3>
                         <div style={s.itemList}>
@@ -202,7 +200,6 @@ const OrderDetail = () => {
 
                     <div style={s.divider} />
 
-                    {/* Delivery */}
                     <div style={s.section}>
                         <h3 style={s.sectionTitle}>{t('order_delivery')}</h3>
                         <div style={s.deliveryGrid}>
@@ -235,7 +232,6 @@ const OrderDetail = () => {
 
                     <div style={s.divider} />
 
-                    {/* Payment */}
                     <div style={s.section}>
                         <h3 style={s.sectionTitle}>{t('order_payment')}</h3>
                         <div style={s.deliveryGrid}>

@@ -148,7 +148,6 @@ const ProductDetail = () => {
         <div className="detail-page-wrapper">
             {toast && <div className="shared-toast">{toast}</div>}
 
-            {/* Lightbox */}
             {lightbox && images.length > 0 && (
                 <div className="lightbox-overlay" onClick={() => setLightbox(false)}>
                     <div className="lightbox-content" onClick={e => e.stopPropagation()}>
@@ -175,7 +174,6 @@ const ProductDetail = () => {
                 </div>
             )}
 
-            {/* Delete product confirm */}
             {confirmDelete && (
                 <div className="shared-overlay">
                     <div className="shared-modal">
@@ -192,7 +190,6 @@ const ProductDetail = () => {
                 </div>
             )}
 
-            {/* Delete review confirm */}
             {confirmDeleteReview && (
                 <div className="shared-overlay">
                     <div className="shared-modal">
@@ -294,7 +291,6 @@ const ProductDetail = () => {
                         </div>
                     )}
 
-                    {/* Reviews */}
                     <div className="detail-section">
                         <h3 className="detail-section-title">{t('reviews_title')} ({reviews.length})</h3>
 
