@@ -18,8 +18,19 @@ connectDB();
 
 const app = express();
 
+const allowedOrigins = [
+    'http://localhost:5179',
+    'https://dipoma-comtech.netlify.app'
+];
+
 app.use(cors({
-    origin: 'http://localhost:5179',
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Blocked by CORS'));
+        }
+    },
     credentials: true
 }));
 
