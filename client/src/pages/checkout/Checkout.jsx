@@ -3,21 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../store/context/CartContext';
 import { useAuth } from '../../store/context/AuthContext';
 import { useLanguage } from '../../store/context/LanguageContext';
+import axiosInstance from '../../services/api/axiosInstance';
 
 const npCities = async (query) => {
-    const res = await fetch('http://localhost:5000/api/novaposhta/cities', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query }),
-    });
-    return res.json();
+    const response = await axiosInstance.post('/novaposhta/cities', { query });
+    return response.data;
 };
 
 const npWarehouses = async (cityRef, query) => {
-    const res = await fetch('http://localhost:5000/api/novaposhta/warehouses', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cityRef, query }),
-    });
-    return res.json();
+    const response = await axiosInstance.post('/novaposhta/warehouses', { cityRef, query });
+    return response.data;
 };
 
 const getCityName = (city) => city?.Description || '';
